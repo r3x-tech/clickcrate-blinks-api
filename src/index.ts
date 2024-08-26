@@ -13,6 +13,10 @@ const port = process.env.PORT || 8080;
 app.use(express.json());
 app.use(cors(ACTIONS_CORS_HEADERS_MIDDLEWARE));
 
+app.get("/", (req, res) => {
+  res.send("Welcome to ClickCrate Actions API!");
+});
+
 app.use("/api/creator", productCreatorRoutes);
 
 app.use(errorHandler);
