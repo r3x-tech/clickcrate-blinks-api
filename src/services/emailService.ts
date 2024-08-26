@@ -87,7 +87,10 @@ class EmailService {
     }
   }
 
-  async sendVerificationEmail(to: string, verificationCode: string): Promise<void> {
+  async sendVerificationEmail(
+    to: string,
+    verificationCode: string
+  ): Promise<void> {
     const subject = "ClickCrate Product Creation Verification";
     const html = `
       <h1>ClickCrate Product Creation Verification</h1>
