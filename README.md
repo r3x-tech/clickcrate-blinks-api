@@ -1,2 +1,3 @@
-# creator-blink-api
-  Create e-commerce blinks in a blink
+# Creator Blink API
+
+Create e-commerce blinks in a blink
