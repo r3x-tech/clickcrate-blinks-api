@@ -17,5 +17,15 @@ export const ProductInfoSchema = z.object({
   contact: z.string().email(),
 });
 
+// Schema for temporary product info storage
+export const TempProductInfoSchema = ProductInfoSchema.extend({
+  clickcrateId: z.string(),
+  verificationCode: z.string(),
+});
+
 export type ProductType = z.infer<typeof ProductTypeSchema>;
 export type ProductInfo = z.infer<typeof ProductInfoSchema>;
+export type TempProductInfo = z.infer<typeof TempProductInfoSchema>;
+
+// In-memory store for temporary product info (possibly replace with a database in production)
+export const tempProductInfoStore: { [key: string]: TempProductInfo } = {};

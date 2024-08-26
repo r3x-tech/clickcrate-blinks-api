@@ -3,22 +3,32 @@ import { z } from "zod";
 import axios from "axios";
 import { PublicKey, Connection, clusterApiUrl } from "@solana/web3.js";
 import { ACTIONS_CORS_HEADERS_MIDDLEWARE } from "@solana/actions";
-import { ProductInfoSchema, ProductTypeSchema } from "../schemas/creator";
+import {
+  ProductInfoSchema,
+  ProductTypeSchema,
+  TempProductInfoSchema,
+  tempProductInfoStore,
+} from "../schemas/creator";
 import { sendVerificationEmail } from "../services/emailService";
 
 const router = express.Router();
 const CLICKCRATE_API_URL = process.env.CLICKCRATE_API_URL;
 
-// Use Zod to create a schema for temporary product info storage
-const TempProductInfoSchema = ProductInfoSchema.extend({
-  clickcrateId: z.string(),
-  verificationCode: z.string(),
-});
+const blinkCorsMiddleware = (
+  req: express.Request,
+  res: express.Response,
+  next: express.NextFunction
+) => {
+  res.set(ACTIONS_CORS_HEADERS_MIDDLEWARE);
+  if (req.method === "OPTIONS") {
+    return res.status(200).json({
+      body: "OK",
+    });
+  }
+  next();
+};
 
-type TempProductInfo = z.infer<typeof TempProductInfoSchema>;
-
-// In-memory store for temporary product info (replace with a database in production)
-const tempProductInfoStore: { [key: string]: TempProductInfo } = {};
+router.use(blinkCorsMiddleware);
 
 // Step 1: Choose product type
 router.get("/:clickcrateId", (req, res) => {
