@@ -1,10 +1,10 @@
 import express from "express";
-import { z } from "zod";
 import axios from "axios";
 import { PublicKey } from "@solana/web3.js";
 import {
   ProductInfoSchema,
   ProductTypeSchema,
+  ProductTypes,
   TempProductInfoSchema,
   tempProductInfoStore,
 } from "../models/schemas";
@@ -36,19 +36,9 @@ router.get("/", (req, res) => {
                 label: "Select a product",
                 required: true,
                 type: "select",
-                options: ProductTypeSchema.options.map((type) => ({
-                  label: type,
-                  value: type,
-                })),
-              },
-              {
-                name: "type",
-                label: "Select a product",
-                required: true,
-                type: "select",
-                options: ProductTypeSchema.options.map((type) => ({
-                  label: type,
-                  value: type,
+                options: ProductTypes.map((type) => ({
+                  label: type.displayName,
+                  value: type.code,
                 })),
               },
             ],
@@ -67,8 +57,14 @@ router.get("/", (req, res) => {
 router.post("/create-product", async (req, res) => {
   try {
     const { type, account } = req.body;
-    if (!ProductTypeSchema.safeParse(type).success) {
+    const parseResult = ProductTypeSchema.safeParse(type);
+    if (!parseResult.success) {
       return sendErrorResponse(res, 400, "Invalid product type");
+    }
+
+    const productType = ProductTypes.find((pt) => pt.code === type);
+    if (!productType) {
+      return sendErrorResponse(res, 400, "Product type not found");
     }
 
     const commonFields = [
@@ -95,9 +91,9 @@ router.post("/create-product", async (req, res) => {
           type: "inline",
           action: {
             icon: "https://shdw-drive.genesysgo.net/CiJnYeRgNUptSKR4MmsAPn7Zhp6LSv91ncWTuNqDLo7T/horizontalmerchcreatoricon.png",
-            label: `Create ${type}`,
+            label: `Create ${productType.displayName}`,
             title: "Enter Product Information",
-            description: `Please provide the following information for your ${type}`,
+            description: `Please provide the following information for your ${productType.displayName}`,
             links: {
               actions: [
                 {
