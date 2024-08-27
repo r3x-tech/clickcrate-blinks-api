@@ -23,22 +23,24 @@ router.get("/", (req, res) => {
       title: "Choose Product Type",
       description: "Select the type of product you want to create",
       links: {
-        actions: ProductTypeSchema.options.map((type) => ({
-          href: `/api/creator/create-product`,
-          label: type,
-          parameters: [
-            {
-              name: "type",
-              label: "Product Type",
-              required: true,
-              type: "select",
-              options: ProductTypeSchema.options.map((type) => ({
-                label: type,
-                value: type,
-              })),
-            },
-          ],
-        })),
+        actions: [
+          {
+            href: `/api/creator/create-product`,
+            label: "Start Creating",
+            parameters: [
+              {
+                name: "type",
+                label: "Product Type",
+                required: true,
+                type: "select",
+                options: ProductTypeSchema.options.map((type) => ({
+                  label: type,
+                  value: type,
+                })),
+              },
+            ],
+          },
+        ],
       },
     };
     sendResponse(res, 200, responseBody);
