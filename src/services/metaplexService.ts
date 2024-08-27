@@ -18,6 +18,7 @@ import { irysUploader } from "@metaplex-foundation/umi-uploader-irys";
 import { fromWeb3JsPublicKey } from "@metaplex-foundation/umi-web3js-adapters";
 import { setComputeUnitPrice } from "@metaplex-foundation/mpl-toolbox";
 import { convertMetaplexInstructionToTransactionInstruction } from "../utils/conversions";
+import { validateImageUri } from "../utils/serviceHelpers";
 
 /**
  *
@@ -43,6 +44,7 @@ export const createMetaplexCollectionNft = async (
   creator: PublicKey
 ) => {
   try {
+    validateImageUri(imageUri);
     const umi = createUmi(network).use(mplCore()).use(irysUploader());
     const umiStandardPublicKey = fromWeb3JsPublicKey(creator);
     const collectionSigner = createNoopSigner(umiStandardPublicKey);
