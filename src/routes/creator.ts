@@ -19,18 +19,19 @@ router.get("/", (req, res) => {
   try {
     const responseBody = {
       icon: "https://shdw-drive.genesysgo.net/CiJnYeRgNUptSKR4MmsAPn7Zhp6LSv91ncWTuNqDLo7T/horizontalmerchcreatoricon.png",
-      label: "Create Product",
-      title: "Choose Product Type",
-      description: "Select the type of product you want to create",
+      label: "START CREATING",
+      title: "ClickCrate Merch Creator",
+      description:
+        "Start selling your own branded merch directly on Twitter in just a few clicks using blinks! To get started simply select a product to create below:",
       links: {
         actions: [
           {
             href: `/api/creator/create-product`,
-            label: "Start Creating",
+            // label: "START CREATING",
             parameters: [
               {
                 name: "type",
-                label: "Product Type",
+                label: "Select a product",
                 required: true,
                 type: "select",
                 options: ProductTypeSchema.options.map((type) => ({
