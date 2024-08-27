@@ -204,7 +204,7 @@ router.post("/verify-product/:tempId", async (req, res) => {
       message: "Product created successfully!",
       links: {
         next: {
-          type: "inline",
+          type: "post",
           action: {
             type: "completed",
             icon: "https://example.com/success-icon.png",
