@@ -37,8 +37,8 @@ router.get("/", (req, res) => {
                 required: true,
                 type: "select",
                 options: ProductTypes.map((type) => ({
-                  label: type.displayName,
-                  value: type.label,
+                  label: type.label,
+                  value: type.value,
                 })),
               },
             ],
@@ -91,9 +91,9 @@ router.post("/create-product", async (req, res) => {
           type: "inline",
           action: {
             icon: "https://shdw-drive.genesysgo.net/CiJnYeRgNUptSKR4MmsAPn7Zhp6LSv91ncWTuNqDLo7T/horizontalmerchcreatoricon.png",
-            label: `Create ${productType.displayName}`,
+            label: `Create ${productType.label}`,
             title: "Enter Product Information",
-            description: `Please provide the following information for your ${productType.displayName}`,
+            description: `Please provide the following information for your ${productType.value}`,
             links: {
               actions: [
                 {
