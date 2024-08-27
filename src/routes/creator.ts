@@ -28,7 +28,7 @@ router.get("/", (req, res) => {
       links: {
         actions: [
           {
-            href: `/api/creator/create-product`,
+            href: `/creator/create-product`,
             label: "START CREATING",
             parameters: [
               {
