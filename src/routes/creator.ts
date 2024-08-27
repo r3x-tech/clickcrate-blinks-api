@@ -10,6 +10,7 @@ import {
 } from "../models/schemas";
 import { sendVerificationEmail } from "../services/emailService";
 import { sendResponse, sendErrorResponse } from "../utils/responseHelper";
+import { ActionGetResponse } from "@solana/actions";
 
 const router = express.Router();
 const CLICKCRATE_API_URL = process.env.CLICKCRATE_API_URL;
@@ -17,9 +18,10 @@ const CLICKCRATE_API_URL = process.env.CLICKCRATE_API_URL;
 // Step 1: Choose product type (GET)
 router.get("/", (req, res) => {
   try {
-    const responseBody = {
+    const responseBody: ActionGetResponse = {
       icon: "https://shdw-drive.genesysgo.net/CiJnYeRgNUptSKR4MmsAPn7Zhp6LSv91ncWTuNqDLo7T/horizontalmerchcreatoricon.png",
       label: "START CREATING",
+      type: "action",
       title: "ClickCrate Merch Creator",
       description:
         "Start selling your own branded merch directly on Twitter in just a few clicks using blinks! To get started simply select a product to create below:",
@@ -27,7 +29,8 @@ router.get("/", (req, res) => {
         actions: [
           {
             href: `/api/creator/create-product`,
-            // label: "START CREATING",
+            label: "START CREATING",
+
             parameters: [
               {
                 name: "type",
