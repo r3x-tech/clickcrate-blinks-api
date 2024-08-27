@@ -41,6 +41,16 @@ router.get("/", (req, res) => {
                   value: type,
                 })),
               },
+              {
+                name: "type",
+                label: "Select a product",
+                required: true,
+                type: "select",
+                options: ProductTypeSchema.options.map((type) => ({
+                  label: type,
+                  value: type,
+                })),
+              },
             ],
           },
         ],
