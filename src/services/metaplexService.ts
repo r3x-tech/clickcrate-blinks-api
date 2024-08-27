@@ -128,6 +128,7 @@ export const createMetaplexNft = async (
     const umiCollectionAddress = fromWeb3JsPublicKey(collectionAddress);
     const assetSigner = createNoopSigner(umiCreatorPublicKey);
     const collection = await fetchCollection(umi, umiCollectionAddress);
+    umi.use(signerIdentity(assetSigner)); // if this does not work, can use signerPayer
     const uri = await umi.uploader.uploadJson({
       name: name,
       symbol: symbol,
