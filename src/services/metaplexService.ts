@@ -1,10 +1,11 @@
-import { PublicKey, getBlock } from "@solana/web3.js";
+import { PublicKey } from "@solana/web3.js";
 import { signerIdentity, createNoopSigner } from '@metaplex-foundation/umi'
 import { createUmi } from "@metaplex-foundation/umi-bundle-defaults";
 import { create, createCollection, fetchCollection, mplCore } from "@metaplex-foundation/mpl-core";
 import { irysUploader } from '@metaplex-foundation/umi-uploader-irys'
 import { fromWeb3JsPublicKey } from "@metaplex-foundation/umi-web3js-adapters";
 import { setComputeUnitPrice } from "@metaplex-foundation/mpl-toolbox";
+import { validateImageUri } from "../utils/serviceHelpers";
 
 /**
  * 
@@ -25,6 +26,7 @@ export const createMetaplexCollection = async (
   plugins: any[]
 ) => {
   try {
+    validateImageUri(imageUri);
     const umiStandardPublicKey = fromWeb3JsPublicKey(publicKey);
     const umi = createUmi(network).use(mplCore()).use(irysUploader());
     const collectionSigner = createNoopSigner(umiStandardPublicKey);
