@@ -1,7 +1,7 @@
 import express from "express";
 import { z } from "zod";
 import axios from "axios";
-import { PublicKey, Connection, clusterApiUrl } from "@solana/web3.js";
+import { PublicKey } from "@solana/web3.js";
 import {
   createActionHeaders,
   ACTIONS_CORS_HEADERS_MIDDLEWARE,
@@ -17,84 +17,106 @@ import { sendVerificationEmail } from "../services/emailService";
 const router = express.Router();
 const CLICKCRATE_API_URL = process.env.CLICKCRATE_API_URL;
 
-const blinkCorsMiddleware = (
-  req: express.Request,
-  res: express.Response,
-  next: express.NextFunction
-) => {
-  res.set(ACTIONS_CORS_HEADERS_MIDDLEWARE);
-  if (req.method === "OPTIONS") {
-    return res.status(200).json({
-      body: "OK",
-    });
-  }
-  next();
+const sendResponse = (res: express.Response, statusCode: number, body: any) => {
+  return res.status(statusCode).set(ACTIONS_CORS_HEADERS_MIDDLEWARE).json(body);
 };
 
-router.use(blinkCorsMiddleware);
+const sendErrorResponse = (
+  res: express.Response,
+  statusCode: number,
+  message: string
+) => {
+  return sendResponse(res, statusCode, { message });
+};
 
-// Step 1: Choose product type
+// Step 1: Choose product type (GET)
 router.get("/", (req, res) => {
-  res.json({
-    icon: "https://shdw-drive.genesysgo.net/CiJnYeRgNUptSKR4MmsAPn7Zhp6LSv91ncWTuNqDLo7T/horizontalmerchcreatoricon.png",
-    label: "Create Product",
-    title: "Choose Product Type",
-    description: "Select the type of product you want to create",
-    links: {
-      actions: ProductTypeSchema.options.map((type) => ({
-        href: `/api/creator/product-info/${type}`,
-        label: type,
-      })),
-    },
-  });
-});
-
-// Step 2: Enter product information
-router.get("/product-info/:type", (req, res) => {
-  const { type } = req.params;
-  if (!ProductTypeSchema.safeParse(type).success) {
-    return res.status(400).json({ error: "Invalid product type" });
-  }
-
-  const commonFields = [
-    { name: "imageUri", label: "Product Image URL" },
-    { name: "name", label: "Product Name" },
-    { name: "description", label: "Product Description" },
-    { name: "quantity", label: "Quantity (1-3)" },
-    { name: "salePrice", label: "Sale Price" },
-    { name: "contact", label: "Contact Email" },
-  ];
-
-  const sizeField = { name: "size", label: "Size (S/M/L/XL)" };
-
-  const fields =
-    type === "T-Shirt" || type === "Hoodie"
-      ? [...commonFields, sizeField]
-      : commonFields;
-
-  res.json({
-    icon: "https://shdw-drive.genesysgo.net/CiJnYeRgNUptSKR4MmsAPn7Zhp6LSv91ncWTuNqDLo7T/horizontalmerchcreatoricon.png",
-    label: `Create ${type}`,
-    title: "Enter Product Information",
-    description: `Please provide the following information for your ${type}`,
-    links: {
-      actions: [
-        {
-          href: `/api/creator/create-product/{${fields
-            .map((f) => f.name)
-            .join("}/{")}}`,
-          label: "Create Product",
-          parameters: fields,
-        },
-      ],
-    },
-  });
-});
-
-// Step 3: Create product and send verification email
-router.post("/create-product/:clickcrateId", async (req, res) => {
   try {
-    const { clickcrateId } = req.params;
+    const responseBody = {
+      icon: "https://shdw-drive.genesysgo.net/CiJnYeRgNUptSKR4MmsAPn7Zhp6LSv91ncWTuNqDLo7T/horizontalmerchcreatoricon.png",
+      label: "Create Product",
+      title: "Choose Product Type",
+      description: "Select the type of product you want to create",
+      links: {
+        actions: ProductTypeSchema.options.map((type) => ({
+          href: `/api/creator/create-product`,
+          label: type,
+          parameters: [
+            {
+              name: "type",
+              label: "Product Type",
+              type: "hidden",
+              value: type,
+            },
+          ],
+        })),
+      },
+    };
+    sendResponse(res, 200, responseBody);
+  } catch (error) {
+    console.error("Error in GET /:", error);
+    sendErrorResponse(res, 500, "Internal server error");
+  }
+});
+
+// Step 2: Enter product information (POST)
+router.post("/create-product", async (req, res) => {
+  try {
+    const { type, account } = req.body;
+    if (!ProductTypeSchema.safeParse(type).success) {
+      return sendErrorResponse(res, 400, "Invalid product type");
+    }
+
+    const commonFields = [
+      { name: "imageUri", label: "Product Image URL" },
+      { name: "name", label: "Product Name" },
+      { name: "description", label: "Product Description" },
+      { name: "quantity", label: "Quantity (1-3)" },
+      { name: "salePrice", label: "Sale Price" },
+      { name: "contact", label: "Contact Email" },
+    ];
+
+    const sizeField = { name: "size", label: "Size (S/M/L/XL)" };
+
+    const fields =
+      type === "T-Shirt" || type === "Hoodie"
+        ? [...commonFields, sizeField]
+        : commonFields;
+
+    const responseBody = {
+      transaction: "dummy_transaction_base64", // TODO: Replace with actual transaction
+      message: "Please provide product information",
+      links: {
+        next: {
+          type: "inline",
+          action: {
+            icon: "https://shdw-drive.genesysgo.net/CiJnYeRgNUptSKR4MmsAPn7Zhp6LSv91ncWTuNqDLo7T/horizontalmerchcreatoricon.png",
+            label: `Create ${type}`,
+            title: "Enter Product Information",
+            description: `Please provide the following information for your ${type}`,
+            links: {
+              actions: [
+                {
+                  href: `/api/creator/submit-product-info`,
+                  label: "Submit Product Info",
+                  parameters: fields,
+                },
+              ],
+            },
+          },
+        },
+      },
+    };
+    sendResponse(res, 200, responseBody);
+  } catch (error) {
+    console.error("Error in POST /create-product:", error);
+    sendErrorResponse(res, 500, "Internal server error");
+  }
+});
+
+// Step 3: Submit product info and send verification email
+router.post("/submit-product-info", async (req, res) => {
+  try {
     const productInfo = ProductInfoSchema.parse(req.body);
 
     // Generate verification code
@@ -105,7 +127,6 @@ router.post("/create-product/:clickcrateId", async (req, res) => {
     // Store product info and verification code
     const tempInfo = TempProductInfoSchema.parse({
       ...productInfo,
-      clickcrateId,
       verificationCode,
     });
 
@@ -115,14 +136,13 @@ router.post("/create-product/:clickcrateId", async (req, res) => {
     // Send verification email
     await sendVerificationEmail(productInfo.contact, verificationCode);
 
-    res.json({
+    const responseBody = {
       transaction: "dummy_transaction_base64", // TODO: Replace with actual transaction
       message: "Verification code sent to your email.",
       links: {
         next: {
           type: "inline",
           action: {
-            type: "action",
             icon: "https://example.com/verify-icon.png",
             label: "Verify Email",
             title: "Enter Verification Code",
@@ -130,7 +150,7 @@ router.post("/create-product/:clickcrateId", async (req, res) => {
             links: {
               actions: [
                 {
-                  href: `/api/creator/verify-product/${tempId}/{code}`,
+                  href: `/api/creator/verify-product/${tempId}`,
                   label: "Verify",
                   parameters: [
                     { name: "code", label: "6-digit Verification Code" },
@@ -141,10 +161,11 @@ router.post("/create-product/:clickcrateId", async (req, res) => {
           },
         },
       },
-    });
+    };
+    sendResponse(res, 200, responseBody);
   } catch (error) {
-    console.error("Error creating product:", error);
-    res.status(400).json({ error: "Invalid product information or API error" });
+    console.error("Error in POST /submit-product-info:", error);
+    sendErrorResponse(res, 400, "Invalid product information or API error");
   }
 });
 
@@ -156,30 +177,29 @@ router.post("/verify-product/:tempId", async (req, res) => {
     const tempInfo = tempProductInfoStore[tempId];
 
     if (!tempInfo || code !== tempInfo.verificationCode) {
-      return res.status(400).json({ error: "Invalid verification code" });
+      return sendErrorResponse(res, 400, "Invalid verification code");
     }
 
     // Call ClickCrate API to register product listing
     const registerResponse = await axios.post(
       `${CLICKCRATE_API_URL}/v1/product-listing/register`,
-      {
-        productListingId: tempInfo.clickcrateId,
-        ...tempInfo,
-      }
+      tempInfo
     );
+
+    const clickcrateId = registerResponse.data.productListingId;
 
     // Activate the product listing
     await axios.post(`${CLICKCRATE_API_URL}/v1/product-listing/activate`, {
-      productListingId: tempInfo.clickcrateId,
+      productListingId: clickcrateId,
     });
 
     // Generate Blink URL
-    const blinkUrl = `${CLICKCRATE_API_URL}/blink/${tempInfo.clickcrateId}`;
+    const blinkUrl = `${CLICKCRATE_API_URL}/blink/${clickcrateId}`;
 
     // Clear temporary storage
     delete tempProductInfoStore[tempId];
 
-    res.json({
+    const responseBody = {
       transaction: "dummy_transaction_base64", // Replace with actual transaction if needed
       message: "Product created successfully!",
       links: {
@@ -194,10 +214,11 @@ router.post("/verify-product/:tempId", async (req, res) => {
           },
         },
       },
-    });
+    };
+    sendResponse(res, 200, responseBody);
   } catch (error) {
-    console.error("Error verifying and creating product:", error);
-    res.status(400).json({ error: "Verification failed or API error" });
+    console.error("Error in POST /verify-product/:tempId:", error);
+    sendErrorResponse(res, 400, "Verification failed or API error");
   }
 });
 
