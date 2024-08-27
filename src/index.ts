@@ -17,7 +17,7 @@ app.get("/", (req, res) => {
   res.send("Welcome to ClickCrate Actions API!");
 });
 
-app.use("/api/creator", productCreatorRoutes);
+app.use("/creator", productCreatorRoutes);
 
 app.use(errorHandler);
 

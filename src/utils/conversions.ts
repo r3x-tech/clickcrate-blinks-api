@@ -1,3 +1,6 @@
+import { Instruction } from "@metaplex-foundation/umi";
+import { PublicKey, TransactionInstruction } from "@solana/web3.js";
+
 export const getOriginFromString = (origin: string): any => {
   switch (origin) {
     case "Clickcrate":
@@ -50,3 +53,17 @@ export const getProductCategoryFromString = (productCategory: string): any => {
       throw new Error(`Invalid product category: ${productCategory}`);
   }
 };
+
+export function convertMetaplexInstructionToTransactionInstruction(
+  metaplexInstruction: Instruction
+): TransactionInstruction {
+  return new TransactionInstruction({
+    keys: metaplexInstruction.keys.map((key) => ({
+      pubkey: new PublicKey(key.pubkey), // Assuming Metaplex PublicKey can be converted to Solana PublicKey
+      isSigner: key.isSigner,
+      isWritable: key.isWritable,
+    })),
+    programId: new PublicKey(metaplexInstruction.programId),
+    data: Buffer.from(metaplexInstruction.data),
+  });
+}

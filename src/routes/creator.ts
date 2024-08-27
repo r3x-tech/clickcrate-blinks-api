@@ -2,7 +2,10 @@ import express from "express";
 import { z } from "zod";
 import axios from "axios";
 import { PublicKey, Connection, clusterApiUrl } from "@solana/web3.js";
-import { ACTIONS_CORS_HEADERS_MIDDLEWARE } from "@solana/actions";
+import {
+  createActionHeaders,
+  ACTIONS_CORS_HEADERS_MIDDLEWARE,
+} from "@solana/actions";
 import {
   ProductInfoSchema,
   ProductTypeSchema,
