@@ -30,7 +30,6 @@ router.get("/", (req, res) => {
           {
             href: `/api/creator/create-product`,
             label: "START CREATING",
-
             parameters: [
               {
                 name: "type",
