@@ -4,9 +4,9 @@ import { z } from "zod";
 export const ProductTypeSchema = z.enum([
   "T-Shirt",
   "Hoodie",
-  "Cap",
-  "Mug",
-  "Tote Bag",
+  "Hat",
+  // "Mug",
+  // "Tote Bag",
 ]);
 export const ProductInfoSchema = z.object({
   imageUri: z.string().url(),

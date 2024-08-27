@@ -34,17 +34,15 @@ const blinkCorsMiddleware = (
 router.use(blinkCorsMiddleware);
 
 // Step 1: Choose product type
-router.get("/:clickcrateId", (req, res) => {
-  const { clickcrateId } = req.params;
-
+router.get("/", (req, res) => {
   res.json({
-    icon: "https://example.com/product-creator-icon.png",
+    icon: "https://shdw-drive.genesysgo.net/CiJnYeRgNUptSKR4MmsAPn7Zhp6LSv91ncWTuNqDLo7T/horizontalmerchcreatoricon.png",
     label: "Create Product",
     title: "Choose Product Type",
     description: "Select the type of product you want to create",
     links: {
       actions: ProductTypeSchema.options.map((type) => ({
-        href: `/api/creator/product-info/${clickcrateId}/${type}`,
+        href: `/api/creator/product-info/${type}`,
         label: type,
       })),
     },
@@ -52,8 +50,8 @@ router.get("/:clickcrateId", (req, res) => {
 });
 
 // Step 2: Enter product information
-router.get("/product-info/:clickcrateId/:type", (req, res) => {
-  const { clickcrateId, type } = req.params;
+router.get("/product-info/:type", (req, res) => {
+  const { type } = req.params;
   if (!ProductTypeSchema.safeParse(type).success) {
     return res.status(400).json({ error: "Invalid product type" });
   }
@@ -75,14 +73,14 @@ router.get("/product-info/:clickcrateId/:type", (req, res) => {
       : commonFields;
 
   res.json({
-    icon: "https://example.com/product-info-icon.png",
+    icon: "https://shdw-drive.genesysgo.net/CiJnYeRgNUptSKR4MmsAPn7Zhp6LSv91ncWTuNqDLo7T/horizontalmerchcreatoricon.png",
     label: `Create ${type}`,
     title: "Enter Product Information",
     description: `Please provide the following information for your ${type}`,
     links: {
       actions: [
         {
-          href: `/api/creator/create-product/${clickcrateId}/{${fields
+          href: `/api/creator/create-product/{${fields
             .map((f) => f.name)
             .join("}/{")}}`,
           label: "Create Product",
