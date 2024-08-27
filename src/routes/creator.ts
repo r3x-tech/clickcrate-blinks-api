@@ -3,31 +3,16 @@ import { z } from "zod";
 import axios from "axios";
 import { PublicKey } from "@solana/web3.js";
 import {
-  createActionHeaders,
-  ACTIONS_CORS_HEADERS_MIDDLEWARE,
-} from "@solana/actions";
-import {
   ProductInfoSchema,
   ProductTypeSchema,
   TempProductInfoSchema,
   tempProductInfoStore,
-} from "../schemas/creator";
+} from "../models/schemas";
 import { sendVerificationEmail } from "../services/emailService";
+import { sendResponse, sendErrorResponse } from "../utils/responseHelper";
 
 const router = express.Router();
 const CLICKCRATE_API_URL = process.env.CLICKCRATE_API_URL;
-
-const sendResponse = (res: express.Response, statusCode: number, body: any) => {
-  return res.status(statusCode).set(ACTIONS_CORS_HEADERS_MIDDLEWARE).json(body);
-};
-
-const sendErrorResponse = (
-  res: express.Response,
-  statusCode: number,
-  message: string
-) => {
-  return sendResponse(res, statusCode, { message });
-};
 
 // Step 1: Choose product type (GET)
 router.get("/", (req, res) => {

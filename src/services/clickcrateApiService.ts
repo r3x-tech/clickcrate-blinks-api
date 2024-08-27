@@ -1,5 +1,5 @@
 import axios from "axios";
-import { ProductInfo } from "../schemas/creator";
+import { ProductInfo } from "../models/schemas";
 
 const CLICKCRATE_API_URL = process.env.CLICKCRATE_API_URL;
 const CLICKCRATE_API_KEY = process.env.CLICKCRATE_API_KEY;
