@@ -4,11 +4,11 @@ export const ProductTypeSchema = z.enum(["T-Shirt", "Hoodie", "Hat"]);
 
 export const ProductTypes = [
   {
-    code: "T-Shirt",
+    label: "T-Shirt",
     displayName: "Heavyweight Premium T-Shirt (Screen Print)",
   },
-  { code: "Hoodie", displayName: "Premium Pullover Hoodie (Screen Print)" },
-  { code: "Hat", displayName: "Embroidered Dad Hat" },
+  { label: "Hoodie", displayName: "Premium Pullover Hoodie (Screen Print)" },
+  { label: "Hat", displayName: "Embroidered Dad Hat" },
 ] as const;
 
 export const ProductInfoSchema = z.object({

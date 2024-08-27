@@ -38,7 +38,7 @@ router.get("/", (req, res) => {
                 type: "select",
                 options: ProductTypes.map((type) => ({
                   label: type.displayName,
-                  value: type.code,
+                  value: type.label,
                 })),
               },
             ],
@@ -62,7 +62,7 @@ router.post("/create-product", async (req, res) => {
       return sendErrorResponse(res, 400, "Invalid product type");
     }
 
-    const productType = ProductTypes.find((pt) => pt.code === type);
+    const productType = ProductTypes.find((pt) => pt.label === type);
     if (!productType) {
       return sendErrorResponse(res, 400, "Product type not found");
     }
