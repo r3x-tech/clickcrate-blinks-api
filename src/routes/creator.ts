@@ -38,42 +38,79 @@ router.get("/", (req, res) => {
                   value: type.value,
                 })),
               },
-              // {
-              //   name: "imageUri",
-              //   label: "Product Image URL",
-              //   required: true,
-              //   type: "url",
-              // },
-              // {
-              //   name: "name",
-              //   label: "Product Name",
-              //   required: true,
-              //   type: "text",
-              // },
-              // {
-              //   name: "description",
-              //   label: "Product Description",
-              //   required: true,
-              //   type: "textarea",
-              // },
-              // {
-              //   name: "quantity",
-              //   label: "Quantity (1-3)",
-              //   required: true,
-              //   type: "select",
-              //   options: [
-              //     { label: "1", value: "1" },
-              //     { label: "2", value: "2" },
-              //     { label: "3", value: "3" },
-              //   ],
-              // },
-              // {
-              //   name: "unitPrice",
-              //   label: "Unit Price (in SOL)",
-              //   required: true,
-              //   type: "number",
-              // },
-              // { name: "email", label: "Email", required: true, type: "email" },
+              {
+                name: "imageUri",
+                label: "Product Image URL",
+                required: true,
+                type: "url",
+              },
+              {
+                name: "name",
+                label: "Product Name",
+                required: true,
+                type: "text",
+              },
+              {
+                name: "description",
+                label: "Product Description",
+                required: true,
+                type: "textarea",
+              },
+              {
+                name: "quantity",
+                label: "Quantity (1-3)",
+                required: true,
+                type: "select",
+                options: [
+                  { label: "1", value: "1" },
+                  { label: "2", value: "2" },
+                  { label: "3", value: "3" },
+                ],
+              },
+              {
+                name: "unitPrice",
+                label: "Unit Price (in SOL)",
+                required: true,
+                type: "number",
+              },
+              { name: "email", label: "Email", required: true, type: "email" },
+            ],
+          },
+        ],
+      },
+    };
+    res.status(200).json(responseBody);
+  } catch (error) {
+    console.error("Error in GET /:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+router.get("/singleinputblink", (req, res) => {
+  try {
+    const responseBody: ActionGetResponse = {
+      icon: "https://shdw-drive.genesysgo.net/CiJnYeRgNUptSKR4MmsAPn7Zhp6LSv91ncWTuNqDLo7T/horizontalmerchcreatoricon.png",
+      label: "START CREATING",
+      type: "action",
+      title: "ClickCrate Merch Creator",
+      description:
+        "Start selling your own branded merch directly on Twitter in just a few clicks using blinks! To get started simply select a product to create below:",
+      links: {
+        actions: [
+          {
+            href: `/creator/create-product`,
+            label: "START CREATING",
+            parameters: [
+              {
+                name: "type",
+                label: "Select a product",
+                required: true,
+                type: "select",
+                options: ProductTypes.map((type) => ({
+                  label: type.label,
+                  value: type.value,
+                })),
+              },
             ],
           },
         ],
