@@ -5,17 +5,14 @@ import {
   ProductInfoSchema,
   ProductTypeSchema,
   ProductTypes,
-  TempProductInfoSchema,
-  tempProductInfoStore,
 } from "../models/schemas";
-import { sendVerificationEmail } from "../services/emailService";
-import { sendResponse, sendErrorResponse } from "../utils/responseHelper";
-import { ActionGetResponse } from "@solana/actions";
+import { ActionGetResponse, ActionPostResponse } from "@solana/actions";
+import * as MetaplexService from "../services/metaplexService";
 
 const router = express.Router();
 const CLICKCRATE_API_URL = process.env.CLICKCRATE_API_URL;
 
-// Step 1: Choose product type (GET)
+// Step 1: Choose product type and provide product info (GET)
 router.get("/", (req, res) => {
   try {
     const responseBody: ActionGetResponse = {
@@ -41,108 +38,139 @@ router.get("/", (req, res) => {
                   value: type.value,
                 })),
               },
+              {
+                name: "imageUri",
+                label: "Product Image URL",
+                required: true,
+                type: "url",
+              },
+              {
+                name: "name",
+                label: "Product Name",
+                required: true,
+                type: "text",
+              },
+              {
+                name: "description",
+                label: "Product Description",
+                required: true,
+                type: "textarea",
+              },
+              {
+                name: "quantity",
+                label: "Quantity (1-3)",
+                required: true,
+                type: "select",
+                options: [
+                  { label: "1", value: "1" },
+                  { label: "2", value: "2" },
+                  { label: "3", value: "3" },
+                ],
+              },
+              {
+                name: "unitPrice",
+                label: "Unit Price (in SOL)",
+                required: true,
+                type: "number",
+              },
+              { name: "email", label: "Email", required: true, type: "email" },
             ],
           },
         ],
       },
     };
-    sendResponse(res, 200, responseBody);
+    res.status(200).json(responseBody);
   } catch (error) {
     console.error("Error in GET /:", error);
-    sendErrorResponse(res, 500, "Internal server error");
+    res.status(500).json({ error: "Internal server error" });
   }
 });
 
-// Step 2: Enter product information (POST)
+// Step 2: Create NFTs and initiate verification (POST)
 router.post("/create-product", async (req, res) => {
-  try {
-    const { type, account } = req.body;
-    const parseResult = ProductTypeSchema.safeParse(type);
-    if (!parseResult.success) {
-      return sendErrorResponse(res, 400, "Invalid product type");
-    }
-
-    const productType = ProductTypes.find((pt) => pt.label === type);
-    if (!productType) {
-      return sendErrorResponse(res, 400, "Product type not found");
-    }
-
-    const commonFields = [
-      { name: "imageUri", label: "Product Image URL" },
-      { name: "name", label: "Product Name" },
-      { name: "description", label: "Product Description" },
-      { name: "quantity", label: "Quantity (1-3)" },
-      { name: "salePrice", label: "Sale Price" },
-      { name: "contact", label: "Contact Email" },
-    ];
-
-    const sizeField = { name: "size", label: "Size (S/M/L/XL)" };
-
-    const fields =
-      type === "T-Shirt" || type === "Hoodie"
-        ? [...commonFields, sizeField]
-        : commonFields;
-
-    const responseBody = {
-      transaction: "dummy_transaction_base64", // TODO: Replace with actual transaction
-      message: "Please provide product information",
-      links: {
-        next: {
-          type: "inline",
-          action: {
-            icon: "https://shdw-drive.genesysgo.net/CiJnYeRgNUptSKR4MmsAPn7Zhp6LSv91ncWTuNqDLo7T/horizontalmerchcreatoricon.png",
-            label: `Create ${productType.label}`,
-            title: "Enter Product Information",
-            description: `Please provide the following information for your ${productType.value}`,
-            links: {
-              actions: [
-                {
-                  href: `/api/creator/submit-product-info`,
-                  label: "Submit Product Info",
-                  parameters: fields,
-                },
-              ],
-            },
-          },
-        },
-      },
-    };
-    sendResponse(res, 200, responseBody);
-  } catch (error) {
-    console.error("Error in POST /create-product:", error);
-    sendErrorResponse(res, 500, "Internal server error");
-  }
-});
-
-// Step 3: Submit product info and send verification email
-router.post("/submit-product-info", async (req, res) => {
   try {
     const productInfo = ProductInfoSchema.parse(req.body);
 
-    // Generate verification code
-    const verificationCode = Math.floor(
-      100000 + Math.random() * 900000
-    ).toString();
+    const {
+      type,
+      account,
+      imageUri,
+      name,
+      description,
+      quantity,
+      unitPrice,
+      email,
+    } = productInfo;
 
-    // Store product info and verification code
-    const tempInfo = TempProductInfoSchema.parse({
-      ...productInfo,
-      verificationCode,
-    });
+    const productType = ProductTypes.find((pt) => pt.label === type);
+    if (!productType) {
+      return res.status(400).json({ error: "Invalid product type" });
+    }
 
-    const tempId = Math.random().toString(36).substring(7);
-    tempProductInfoStore[tempId] = tempInfo;
+    // Create ClickCrate POS Collection NFT
+    const posCollectionNft = await MetaplexService.createMetaplexCollectionNft(
+      `${name} ClickCrate POS`,
+      "CPOS",
+      `ClickCrate POS for ${name}`,
+      imageUri,
+      "",
+      "",
+      "",
+      [],
+      [],
+      "devnet",
+      new PublicKey(account)
+    );
 
-    // Send verification email
-    await sendVerificationEmail(productInfo.contact, verificationCode);
+    // Create Product Listing Collection NFT
+    const listingCollectionNft =
+      await MetaplexService.createMetaplexCollectionNft(
+        `${name} Product Listing`,
+        "PLST",
+        `Product Listing for ${name}`,
+        imageUri,
+        "",
+        "",
+        "",
+        [],
+        [],
+        "devnet",
+        new PublicKey(account)
+      );
 
-    const responseBody = {
-      transaction: "dummy_transaction_base64", // TODO: Replace with actual transaction
-      message: "Verification code sent to your email.",
+    // Create Product NFTs
+    const productNfts = [];
+    for (let i = 0; i < quantity; i++) {
+      const productNft = await MetaplexService.createMetaplexNft(
+        `${name} #${i + 1}`,
+        "PNFT",
+        `Product NFT for ${name}`,
+        imageUri,
+        "",
+        "",
+        "",
+        [],
+        [],
+        // listingCollectionNft.publicKey,
+        new PublicKey(account), // need ro remove and get actual listingCollectionNft.publicKey,
+        "devnet",
+        new PublicKey(account)
+      );
+      productNfts.push(productNft);
+    }
+
+    // Initiate verification
+    await axios.post(`${CLICKCRATE_API_URL}/initiate-verification`, { email });
+
+    const responseBody: ActionPostResponse = {
+      transaction: Buffer.from(posCollectionNft.serialize()).toString("base64"),
+      message:
+        "NFTs created. Please check your email for the verification code.",
       links: {
         next: {
           type: "inline",
           action: {
+            type: "action",
             icon: "https://example.com/verify-icon.png",
             label: "Verify Email",
             title: "Enter Verification Code",
@@ -150,10 +178,25 @@ router.post("/submit-product-info", async (req, res) => {
             links: {
               actions: [
                 {
-                  href: `/api/creator/verify-product/${tempId}`,
-                  label: "Verify",
+                  // href: `/creator/verify-and-place?pos=${posCollectionNft.publicKey.toString()}&listing=${listingCollectionNft.publicKey.toString()}&products=${productNfts.map(nft => nft.publicKey.toString()).join(',')}&price=${unitPrice}&account=${account}`,
+                  href: `/creator/verify-and-place?pos=${posCollectionNft.toString()}&listing=${listingCollectionNft.toString()}&products=${productNfts
+                    .map((nft) => nft.toString())
+                    .join(",")}&price=${unitPrice}&account=${account}`,
+
+                  label: "Verify and Place Product",
                   parameters: [
-                    { name: "code", label: "6-digit Verification Code" },
+                    {
+                      name: "code",
+                      label: "6-digit Verification Code",
+                      type: "text",
+                      required: true,
+                    },
+                    {
+                      name: "email",
+                      label: "Email",
+                      type: "email",
+                      required: true,
+                    },
                   ],
                 },
               ],
@@ -162,63 +205,93 @@ router.post("/submit-product-info", async (req, res) => {
         },
       },
     };
-    sendResponse(res, 200, responseBody);
+    res.status(200).json(responseBody);
   } catch (error) {
-    console.error("Error in POST /submit-product-info:", error);
-    sendErrorResponse(res, 400, "Invalid product information or API error");
+    console.error("Error in POST /create-product:", error);
+    res.status(500).json({ error: "Internal server error" });
   }
 });
 
-// Step 4: Verify code and finalize product creation
-router.post("/verify-product/:tempId", async (req, res) => {
+// Step 3: Verify email, register, activate, and place product (POST)
+router.post("/verify-and-place", async (req, res) => {
   try {
-    const { tempId } = req.params;
-    const { code } = req.body;
-    const tempInfo = tempProductInfoStore[tempId];
+    const { code, email, pos, listing, products, price, account } = req.body;
 
-    if (!tempInfo || code !== tempInfo.verificationCode) {
-      return sendErrorResponse(res, 400, "Invalid verification code");
-    }
-
-    // Call ClickCrate API to register product listing
-    const registerResponse = await axios.post(
-      `${CLICKCRATE_API_URL}/v1/product-listing/register`,
-      tempInfo
+    // Verify code using ClickCrate API
+    const verificationResponse = await axios.post(
+      `${CLICKCRATE_API_URL}/verify-code`,
+      {
+        email,
+        code,
+      }
     );
 
-    const clickcrateId = registerResponse.data.productListingId;
+    if (!verificationResponse.data.verified) {
+      return res.status(400).json({ error: "Invalid verification code" });
+    }
 
-    // Activate the product listing
-    await axios.post(`${CLICKCRATE_API_URL}/v1/product-listing/activate`, {
-      productListingId: clickcrateId,
-    });
+    // Register ClickCrate POS
+    const registerPosResponse = await axios.post(
+      `${CLICKCRATE_API_URL}/api/clickcrates/register`,
+      {
+        clickcrateId: pos,
+        eligiblePlacementType: "Twitter",
+        eligibleProductCategory: "Merch",
+        manager: account,
+      }
+    );
 
-    // Generate Blink URL
+    // Activate ClickCrate POS
+    const activatePosResponse = await axios.post(
+      `${CLICKCRATE_API_URL}/api/clickcrates/activate`,
+      {
+        clickcrateId: pos,
+      }
+    );
+
+    // Register Product Listing
+    const registerListingResponse = await axios.post(
+      `${CLICKCRATE_API_URL}/api/product-listings/register`,
+      {
+        productListingId: listing,
+        origin: "ClickCrate",
+        eligiblePlacementType: "Twitter",
+        eligibleProductCategory: "Merch",
+        manager: account,
+        price: price,
+        orderManager: "clickcrate",
+      }
+    );
+
+    // Activate Product Listing
+    const activateListingResponse = await axios.post(
+      `${CLICKCRATE_API_URL}/api/product-listings/activate`,
+      {
+        productListingId: listing,
+      }
+    );
+
+    // Place Product Listing in ClickCrate POS
+    const placeProductResponse = await axios.post(
+      `${CLICKCRATE_API_URL}/api/product-listings/place`,
+      {
+        productListingId: listing,
+        clickcrateId: pos,
+        price: price,
+      }
+    );
+
+    const clickcrateId = pos;
     const blinkUrl = `${CLICKCRATE_API_URL}/blink/${clickcrateId}`;
 
-    // Clear temporary storage
-    delete tempProductInfoStore[tempId];
-
-    const responseBody = {
-      transaction: "dummy_transaction_base64", // Replace with actual transaction if needed
-      message: "Product created successfully!",
-      links: {
-        next: {
-          type: "post",
-          action: {
-            type: "completed",
-            icon: "https://example.com/success-icon.png",
-            label: "Product Created",
-            title: "Product Successfully Created",
-            description: `Your product has been created and is ready for sale. Share this Blink URL on Twitter to start selling: ${blinkUrl}`,
-          },
-        },
-      },
+    const responseBody: ActionPostResponse = {
+      transaction: placeProductResponse.data.transaction,
+      message: `Your product is ready for sale!. Share this Blink URL on Twitter to start selling: ${blinkUrl}`,
     };
-    sendResponse(res, 200, responseBody);
+    res.status(200).json(responseBody);
   } catch (error) {
-    console.error("Error in POST /verify-product/:tempId:", error);
-    sendErrorResponse(res, 400, "Verification failed or API error");
+    console.error("Error in POST /verify-and-place:", error);
+    res.status(500).json({ error: "Internal server error" });
   }
 });
 
