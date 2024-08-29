@@ -33,6 +33,7 @@
     "nodemailer": "^6.9.14",
     "ts-jest": "^29.2.5",
     "ts-node": "^10.9.2",
+    "tweetnacl-util": "^0.15.1",
     "typescript": "^5.5.4",
     "zod": "^3.23.8"
   },
