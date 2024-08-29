@@ -1,7 +1,5 @@
 import {
   PublicKey,
-  sendAndConfirmRawTransaction,
-  sendAndConfirmTransaction,
   TransactionMessage,
   VersionedTransaction,
 } from "@solana/web3.js";
@@ -12,6 +10,8 @@ import {
   create,
   createCollection,
   fetchCollection,
+  fetchAsset,
+  fetchAssetsByCollection,
   mplCore,
 } from "@metaplex-foundation/mpl-core";
 import { irysUploader } from "@metaplex-foundation/umi-uploader-irys";
@@ -19,16 +19,6 @@ import { fromWeb3JsPublicKey } from "@metaplex-foundation/umi-web3js-adapters";
 import { setComputeUnitPrice } from "@metaplex-foundation/mpl-toolbox";
 import { convertMetaplexInstructionToTransactionInstruction } from "../utils/conversions";
 import { validateImageUri } from "../utils/serviceHelpers";
-
-/**
- *
- * @param collectionName: string
- * @param imageUri: string
- * @param collectionSymbol: string
- * @param creator: PublicKey
- * @param network: any (for now) xw
- * @param plugins: array of type any (for now)
- */
 
 export const createMetaplexCollectionNft = async (
   name: string,
@@ -41,14 +31,16 @@ export const createMetaplexCollectionNft = async (
   attributesList: Attribute[],
   plugins: any[],
   network: "mainnet" | "devnet",
-  creator: PublicKey
+  creator: PublicKey,
+  feePayer: PublicKey
 ) => {
   try {
     validateImageUri(imageUri);
     const umi = createUmi(network).use(mplCore()).use(irysUploader());
-    const umiStandardPublicKey = fromWeb3JsPublicKey(creator);
-    const collectionSigner = createNoopSigner(umiStandardPublicKey);
-    umi.use(signerIdentity(collectionSigner)); // if this does not work, can use signerPayer
+    const umiCreatorPublicKey = fromWeb3JsPublicKey(creator);
+    const collectionSigner = createNoopSigner(umiCreatorPublicKey);
+    umi.use(signerIdentity(collectionSigner));
+
     const uri = await umi.uploader.uploadJson({
       symbol: symbol,
       description: description,
@@ -67,7 +59,7 @@ export const createMetaplexCollectionNft = async (
         category: "image",
         creators: [
           {
-            address: "Engvm8giPGZvLV115DkzhVGkWKR5j11ZTrggo5EUQBau",
+            address: creator.toBase58(),
             share: 100,
           },
         ],
@@ -78,15 +70,22 @@ export const createMetaplexCollectionNft = async (
       collection: collectionSigner,
       name,
       uri,
-      updateAuthority: umiStandardPublicKey,
-      plugins,
+      updateAuthority: umiCreatorPublicKey,
+      plugins: [
+        ...plugins,
+        {
+          type: "Attributes",
+          attributeList: attributesList,
+        },
+      ],
     }).prepend(setComputeUnitPrice(umi, { microLamports: 1000 }));
+
     if (!txBuilder || txBuilder.getBlockhash() == undefined) {
       throw Error("Failed to retrieve builder");
     }
     const ixs = txBuilder.getInstructions();
     const msg = new TransactionMessage({
-      payerKey: creator,
+      payerKey: feePayer,
       recentBlockhash: txBuilder.getBlockhash() as string,
       instructions: [
         ...ixs.map(convertMetaplexInstructionToTransactionInstruction),
@@ -100,16 +99,6 @@ export const createMetaplexCollectionNft = async (
   }
 };
 
-/**
- *
- * @param nftName: string
- * @param nftImageUri: string
- * @param creator: publicKey
- * @param network: any (for now)
- * @param plugins: array of type any (for now)
- * @param attributes: array of type any (for now)
- */
-
 export const createMetaplexNft = async (
   name: string,
   symbol: string,
@@ -122,7 +111,8 @@ export const createMetaplexNft = async (
   plugins: any[],
   collectionAddress: PublicKey,
   network: "mainnet" | "devnet",
-  creator: PublicKey
+  creator: PublicKey,
+  feePayer: PublicKey
 ) => {
   try {
     const umi = createUmi(network).use(mplCore()).use(irysUploader());
@@ -130,7 +120,8 @@ export const createMetaplexNft = async (
     const umiCollectionAddress = fromWeb3JsPublicKey(collectionAddress);
     const assetSigner = createNoopSigner(umiCreatorPublicKey);
     const collection = await fetchCollection(umi, umiCollectionAddress);
-    umi.use(signerIdentity(assetSigner)); // if this does not work, can use signerPayer
+    umi.use(signerIdentity(assetSigner));
+
     const uri = await umi.uploader.uploadJson({
       name: name,
       symbol: symbol,
@@ -150,7 +141,7 @@ export const createMetaplexNft = async (
         category: "image",
         creators: [
           {
-            address: "Engvm8giPGZvLV115DkzhVGkWKR5j11ZTrggo5EUQBau",
+            address: creator.toBase58(),
             share: 100,
           },
         ],
@@ -162,14 +153,21 @@ export const createMetaplexNft = async (
       collection,
       name: name,
       uri,
-      plugins,
+      plugins: [
+        ...plugins,
+        {
+          type: "Attributes",
+          attributeList: attributesList,
+        },
+      ],
     }).prepend(setComputeUnitPrice(umi, { microLamports: 1000 }));
+
     if (!txBuilder || txBuilder.getBlockhash() == undefined) {
       throw Error("Failed to retrieve builder");
     }
     const ixs = txBuilder.getInstructions();
     const msg = new TransactionMessage({
-      payerKey: creator,
+      payerKey: feePayer,
       recentBlockhash: txBuilder.getBlockhash() as string,
       instructions: [
         ...ixs.map(convertMetaplexInstructionToTransactionInstruction),
@@ -179,6 +177,38 @@ export const createMetaplexNft = async (
     return new VersionedTransaction(msg);
   } catch (error) {
     console.error("Error creating metaplex nft", error);
+    throw error;
+  }
+};
+
+export const fetchSingleAsset = async (
+  assetAddress: PublicKey,
+  network: "mainnet" | "devnet"
+) => {
+  try {
+    const umi = createUmi(network).use(mplCore());
+    const umiAssetAddress = fromWeb3JsPublicKey(assetAddress);
+
+    const asset = await fetchAsset(umi, umiAssetAddress);
+    return asset;
+  } catch (error) {
+    console.error("Error fetching single asset", error);
+    throw error;
+  }
+};
+
+export const fetchAssetsByCollectionAddress = async (
+  collectionAddress: PublicKey,
+  network: "mainnet" | "devnet"
+) => {
+  try {
+    const umi = createUmi(network).use(mplCore());
+    const umiCollectionAddress = fromWeb3JsPublicKey(collectionAddress);
+
+    const assets = await fetchAssetsByCollection(umi, umiCollectionAddress);
+    return assets;
+  } catch (error) {
+    console.error("Error fetching assets by collection", error);
     throw error;
   }
 };

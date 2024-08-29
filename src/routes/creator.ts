@@ -86,43 +86,6 @@ router.get("/", (req, res) => {
   }
 });
 
-router.get("/singleinputblink", (req, res) => {
-  try {
-    const responseBody: ActionGetResponse = {
-      icon: "https://shdw-drive.genesysgo.net/CiJnYeRgNUptSKR4MmsAPn7Zhp6LSv91ncWTuNqDLo7T/horizontalmerchcreatoricon.png",
-      label: "START CREATING",
-      type: "action",
-      title: "ClickCrate Merch Creator",
-      description:
-        "Start selling your own branded merch directly on Twitter in just a few clicks using blinks! To get started simply select a product to create below:",
-      links: {
-        actions: [
-          {
-            href: `/creator/create-product`,
-            label: "START CREATING",
-            parameters: [
-              {
-                name: "type",
-                label: "Select a product",
-                required: true,
-                type: "select",
-                options: ProductTypes.map((type) => ({
-                  label: type.label,
-                  value: type.value,
-                })),
-              },
-            ],
-          },
-        ],
-      },
-    };
-    res.status(200).json(responseBody);
-  } catch (error) {
-    console.error("Error in GET /:", error);
-    res.status(500).json({ error: "Internal server error" });
-  }
-});
-
 // Step 2: Create NFTs and initiate verification (POST)
 router.post("/create-product", async (req, res) => {
   try {
@@ -155,7 +118,7 @@ router.post("/create-product", async (req, res) => {
       "",
       [],
       [],
-      "devnet",
+      "mainnet",
       new PublicKey(account)
     );
 
@@ -171,7 +134,7 @@ router.post("/create-product", async (req, res) => {
         "",
         [],
         [],
-        "devnet",
+        "mainnet",
         new PublicKey(account)
       );
 
@@ -190,7 +153,7 @@ router.post("/create-product", async (req, res) => {
         [],
         // listingCollectionNft.publicKey,
         new PublicKey(account), // need ro remove and get actual listingCollectionNft.publicKey,
-        "devnet",
+        "mainnet",
         new PublicKey(account)
       );
       productNfts.push(productNft);
@@ -328,6 +291,43 @@ router.post("/verify-and-place", async (req, res) => {
     res.status(200).json(responseBody);
   } catch (error) {
     console.error("Error in POST /verify-and-place:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+router.get("/singleinputblink", (req, res) => {
+  try {
+    const responseBody: ActionGetResponse = {
+      icon: "https://shdw-drive.genesysgo.net/CiJnYeRgNUptSKR4MmsAPn7Zhp6LSv91ncWTuNqDLo7T/horizontalmerchcreatoricon.png",
+      label: "START CREATING",
+      type: "action",
+      title: "ClickCrate Merch Creator",
+      description:
+        "Start selling your own branded merch directly on Twitter in just a few clicks using blinks! To get started simply select a product to create below:",
+      links: {
+        actions: [
+          {
+            href: `/creator/create-product`,
+            label: "START CREATING",
+            parameters: [
+              {
+                name: "type",
+                label: "Select a product",
+                required: true,
+                type: "select",
+                options: ProductTypes.map((type) => ({
+                  label: type.label,
+                  value: type.value,
+                })),
+              },
+            ],
+          },
+        ],
+      },
+    };
+    res.status(200).json(responseBody);
+  } catch (error) {
+    console.error("Error in GET /:", error);
     res.status(500).json({ error: "Internal server error" });
   }
 });
