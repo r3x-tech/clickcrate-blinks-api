@@ -89,6 +89,7 @@ router.get("/", (req, res) => {
 // Step 2: Create NFTs and initiate verification (POST)
 router.post("/create-product", async (req, res) => {
   try {
+    const publicKey = new PublicKey(req.body.account);
     const productInfo = ProductInfoSchema.parse(req.body);
 
     const {
@@ -139,7 +140,6 @@ router.post("/create-product", async (req, res) => {
         },
       ],
       [],
-      "mainnet",
       new PublicKey(account),
       new PublicKey(account)
     );
@@ -189,15 +189,14 @@ router.post("/create-product", async (req, res) => {
           },
         ],
         [],
-        "mainnet",
         new PublicKey(account),
-        new PublicKey(account)
+        publicKey
       );
 
     // Create Product NFTs
     const productNfts = [];
     for (let i = 0; i < quantity; i++) {
-      const productNft = await MetaplexService.createMetaplexNft(
+      const productNft = await MetaplexService.createMetaplexNftInCollection(
         `${name} #${i + 1}`,
         `PCC${i}`,
         `${description}`,
@@ -226,9 +225,8 @@ router.post("/create-product", async (req, res) => {
         [],
         // listingCollectionNft.publicKey,
         new PublicKey(account), // need to remove and get actual listingCollectionNft.publicKey,
-        "mainnet",
         new PublicKey(account),
-        new PublicKey(account)
+        publicKey,
       );
       productNfts.push(productNft);
     }
