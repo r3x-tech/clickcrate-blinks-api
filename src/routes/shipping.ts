@@ -1,10 +1,6 @@
 import express from "express";
-import axios from "axios";
 import { PublicKey } from "@solana/web3.js";
 import {
-  ProductInfoSchema,
-  ProductTypeSchema,
-  ProductTypes,
   ShippingDetailsSchema
 } from "../models/schemas";
 import { ActionGetResponse, ActionPostResponse } from "@solana/actions";
@@ -37,7 +33,7 @@ router.get("/", (req, res) => {
           actions: [
             {
               href: `/shipping/create-shipping-info-nft`,
-              label: "Shipping address",
+              label: "Mint",
               parameters: [
                 {
                   name: "shippingName",
@@ -123,115 +119,28 @@ router.get("/", (req, res) => {
         validateShippingStateProvince(shippingStateProvince) &&
         validateShippingZipCode(shippingZipCode)
     ) {
-        const encryptedInfo = encryptShippingInfo(publicKey, shippingInfo);
-        console.log(encryptedInfo, " HI I AM ENCRYPTED INFO")
-    } else {
-        res.status(400).json({ error: "Bad request" });
-    }
-    //   const productType = ProductTypes.find((pt) => pt.label === type);
-    //   if (!productType) {
-    //     return res.status(400).json({ error: "Invalid product type" });
-    //   }
-  
-    //   // Create ClickCrate POS Collection NFT
-    //   const posCollectionNft = await MetaplexService.createMetaplexCollectionNft(
-    //     `${name} ClickCrate POS`,
-    //     "CPOS",
-    //     `ClickCrate POS for ${name}`,
-    //     imageUri,
-    //     "",
-    //     "",
-    //     "",
-    //     [],
-    //     [],
-    //     "devnet",
-    //     new PublicKey(account)
-    //   );
-  
-    //   // Create Product Listing Collection NFT
-    //   const listingCollectionNft =
-    //     await MetaplexService.createMetaplexCollectionNft(
-    //       `${name} Product Listing`,
-    //       "PLST",
-    //       `Product Listing for ${name}`,
-    //       imageUri,
-    //       "",
-    //       "",
-    //       "",
-    //       [],
-    //       [],
-    //       "devnet",
-    //       new PublicKey(account)
-    //     );
-  
-    //   // Create Product NFTs
-    //   const productNfts = [];
-    //   for (let i = 0; i < quantity; i++) {
-    //     const productNft = await MetaplexService.createMetaplexNft(
-    //       `${name} #${i + 1}`,
-    //       "PNFT",
-    //       `Product NFT for ${name}`,
-    //       imageUri,
-    //       "",
-    //       "",
-    //       "",
-    //       [],
-    //       [],
-    //       // listingCollectionNft.publicKey,
-    //       new PublicKey(account), // need ro remove and get actual listingCollectionNft.publicKey,
-    //       "devnet",
-    //       new PublicKey(account)
-    //     );
-    //     productNfts.push(productNft);
-    //   }
-  
-    //   // Initiate verification
-    //   await axios.post(`${CLICKCRATE_API_URL}/initiate-verification`, { email });
-  
-    //   const responseBody: ActionPostResponse = {
-    //     transaction: Buffer.from(posCollectionNft.serialize()).toString("base64"),
-    //     message:
-    //       "NFTs created. Please check your email for the verification code.",
-    //     links: {
-    //       next: {
-    //         type: "inline",
-    //         action: {
-    //           type: "action",
-    //           icon: "https://example.com/verify-icon.png",
-    //           label: "Verify Email",
-    //           title: "Enter Verification Code",
-    //           description: "Please enter the 6-digit code sent to your email.",
-    //           links: {
-    //             actions: [
-    //               {
-    //                 // href: `/creator/verify-and-place?pos=${posCollectionNft.publicKey.toString()}&listing=${listingCollectionNft.publicKey.toString()}&products=${productNfts.map(nft => nft.publicKey.toString()).join(',')}&price=${unitPrice}&account=${account}`,
-    //                 href: `/creator/verify-and-place?pos=${posCollectionNft.toString()}&listing=${listingCollectionNft.toString()}&products=${productNfts
-    //                   .map((nft) => nft.toString())
-    //                   .join(",")}&price=${unitPrice}&account=${account}`,
-  
-    //                 label: "Verify and Place Product",
-    //                 parameters: [
-    //                   {
-    //                     name: "code",
-    //                     label: "6-digit Verification Code",
-    //                     type: "text",
-    //                     required: true,
-    //                   },
-    //                   {
-    //                     name: "email",
-    //                     label: "Email",
-    //                     type: "email",
-    //                     required: true,
-    //                   },
-    //                 ],
-    //               },
-    //             ],
-    //           },
-    //         },
-    //       },
-    //     },
-    //   };
-      res.status(200).json("success");
+        const encryptedShippingInfo = encryptShippingInfo(publicKey, shippingInfo);
+        const shippingInfoNftTransaction = await MetaplexService.createMetaplexNft(
+            "ClickCrate NFT",
+            "PNFT",
+            `Shipping NFT`,
+            "https://shdw-drive.genesysgo.net/CiJnYeRgNUptSKR4MmsAPn7Zhp6LSv91ncWTuNqDLo7T/horizontalmerchcreatoricon.png",
+            "",
+            "",
+            "",
+            [{trait_type: "shippingInfo", value: encryptedShippingInfo}],
+            [{ type: 'FreezeDelegate', data: { frozen: true } }],
+            publicKey,
+          );
+         
+            const responseBody: ActionPostResponse = {
+                transaction: Buffer.from(shippingInfoNftTransaction).toString("base64"),
+                message:"NFTs created. Please check your email for the verification code.",
+          };
+          res.status(200).json(responseBody);
+        } else {
+            res.status(400).json({ error: "Bad request" });
+        }
     } catch (error) {
       console.error("Error in POST /create-shipping-info-nft:", error);
       res.status(500).json({ error: "Internal server error" });
