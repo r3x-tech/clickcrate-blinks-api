@@ -1,20 +1,20 @@
 import { z } from "zod";
 
 export const ProductTypeSchema = z.enum([
-  // "Heavyweight Premium T-Shirt (Screen Print)",
-  // "Premium Pullover Hoodie (Screen Print)",
+  "Heavyweight Premium T-Shirt (Screen Print)",
+  "Premium Pullover Hoodie (Screen Print)",
   "Embroidered Dad Hat",
 ]);
 
 export const ProductTypes = [
-  // {
-  //   value: "tshirt",
-  //   label: "Heavyweight Premium T-Shirt (Screen Print)" as const,
-  // },
-  // {
-  //   value: "hoodie",
-  //   label: "Premium Pullover Hoodie (Screen Print)" as const,
-  // },
+  {
+    value: "tshirt",
+    label: "Heavyweight Premium T-Shirt (Screen Print)" as const,
+  },
+  {
+    value: "hoodie",
+    label: "Premium Pullover Hoodie (Screen Print)" as const,
+  },
   {
     value: "hat",
     label: "Embroidered Dad Hat" as const,
