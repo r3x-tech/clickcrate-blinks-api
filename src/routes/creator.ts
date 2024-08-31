@@ -111,30 +111,86 @@ router.post("/create-product", async (req, res) => {
     const posCollectionNft = await MetaplexService.createMetaplexCollectionNft(
       `${name} ClickCrate POS`,
       "CPOS",
-      `ClickCrate POS for ${name}`,
+      `${name} ClickCrate POS`,
       imageUri,
-      "",
-      "",
-      "",
-      [],
+      ``,
+      `https://www.clickcrate.xyz/`,
+      `https://www.clickcrate.xyz/`,
+      [
+        {
+          key: "Type",
+          value: "ClickCrate",
+        },
+        {
+          key: "Placement Type",
+          value: "Related Purchase",
+        },
+        {
+          key: "Additional Placement Requirements",
+          value: "None",
+        },
+        {
+          key: "Placement Fee (USDC)",
+          value: "0",
+        },
+        {
+          key: "User Profile Uri",
+          value: "None",
+        },
+      ],
       [],
       "mainnet",
+      new PublicKey(account),
       new PublicKey(account)
     );
 
     // Create Product Listing Collection NFT
     const listingCollectionNft =
       await MetaplexService.createMetaplexCollectionNft(
-        `${name} Product Listing`,
-        "PLST",
-        `Product Listing for ${name}`,
+        `${name}`,
+        "PLCC",
+        `${description}`,
         imageUri,
-        "",
-        "",
-        "",
-        [],
+        ``,
+        `https://www.clickcrate.xyz/`,
+        `https://www.clickcrate.xyz/`,
+        [
+          {
+            key: "Type",
+            value: "Product Listing",
+          },
+          {
+            key: "Product Category",
+            value: "Clothing",
+          },
+          {
+            key: "Brand",
+            value: "ClickCrate",
+          },
+          {
+            key: "Size(s)",
+            value: "Unisex",
+          },
+          {
+            key: "Placement Type",
+            value: "Related Purchase",
+          },
+          {
+            key: "Additional Placement Requirements",
+            value: "None",
+          },
+          {
+            key: "Discount",
+            value: "None",
+          },
+          {
+            key: "Customer Profile Uri",
+            value: "None",
+          },
+        ],
         [],
         "mainnet",
+        new PublicKey(account),
         new PublicKey(account)
       );
 
@@ -143,17 +199,35 @@ router.post("/create-product", async (req, res) => {
     for (let i = 0; i < quantity; i++) {
       const productNft = await MetaplexService.createMetaplexNft(
         `${name} #${i + 1}`,
-        "PNFT",
-        `Product NFT for ${name}`,
+        `PCC${i}`,
+        `${description}`,
         imageUri,
         "",
-        "",
-        "",
-        [],
+        `https://www.clickcrate.xyz/`,
+        `https://www.clickcrate.xyz/`,
+        [
+          {
+            key: "Type",
+            value: "Product",
+          },
+          {
+            key: "Product Category",
+            value: "Clothing",
+          },
+          {
+            key: "Brand",
+            value: "ClickCrate",
+          },
+          {
+            key: "Size",
+            value: "Unisex",
+          },
+        ],
         [],
         // listingCollectionNft.publicKey,
-        new PublicKey(account), // need ro remove and get actual listingCollectionNft.publicKey,
+        new PublicKey(account), // need to remove and get actual listingCollectionNft.publicKey,
         "mainnet",
+        new PublicKey(account),
         new PublicKey(account)
       );
       productNfts.push(productNft);
