@@ -1,16 +1,12 @@
 import {
   Connection,
+  Keypair,
   PublicKey,
+  Transaction,
   TransactionMessage,
   VersionedTransaction,
 } from "@solana/web3.js";
-import {
-  signerIdentity,
-  createNoopSigner,
-  KeypairSigner,
-  createSignerFromKeypair,
-  generateSigner,
-} from "@metaplex-foundation/umi";
+import { signerIdentity, createNoopSigner, KeypairSigner, createSignerFromKeypair, generateSigner } from "@metaplex-foundation/umi";
 import { createUmi } from "@metaplex-foundation/umi-bundle-defaults";
 import {
   Attribute,
@@ -26,28 +22,35 @@ import { fromWeb3JsPublicKey } from "@metaplex-foundation/umi-web3js-adapters";
 import { setComputeUnitPrice } from "@metaplex-foundation/mpl-toolbox";
 import { convertMetaplexInstructionToTransactionInstruction } from "../utils/conversions";
 import { validateImageUri } from "../utils/serviceHelpers";
-import bs58 from "bs58";
+import bs58 from 'bs58';
 
-const createUmiUploader = (network: "mainnet" | "devnet") => {
-  return createUmi(network).use(mplCore()).use(irysUploader());
+const createUmiUploader = () => {
+  const rpcUrl = process.env.NODE_ENV === "development" ? process.env.SOLANA_DEVNET_RPC_URL : process.env.SOLANA_MAINNET_RPC_URL;
+  const solanaConnection = new Connection(rpcUrl!, "confirmed")
+  return createUmi(solanaConnection).use(mplCore()).use(irysUploader());
 };
 
-const uploadJsonUmi = async (network: "mainnet" | "devnet", data: any) => {
-  const umi = createUmiUploader(network);
-
-  const serverWallet = umi.eddsa.createKeypairFromSecretKey(
-    bs58.decode(process.env.SERVER_WALLET_SK!)
-  );
-  const serverSigner: KeypairSigner = createSignerFromKeypair(
-    umi,
-    serverWallet
-  );
-
+const uploadJsonUmi = async (data: any) => {
+  const umi = createUmiUploader();
+  const secretKeyUint8Array = bs58.decode(process.env.SERVER_WALLET_SK!);
+  const userWallet = Keypair.fromSecretKey(Uint8Array.from(secretKeyUint8Array));
+  const serverWallet = umi.eddsa.createKeypairFromSecretKey(userWallet.secretKey);
+  const serverSigner: KeypairSigner = createSignerFromKeypair(umi, serverWallet);
   umi.use(signerIdentity(serverSigner));
-  const umiSigner = generateSigner(umi);
-
   return await umi.uploader.uploadJson(data);
 };
+
+// const uploadMetaData = async (metaData: any) => {
+//   const solanaConnection = new Connection("https://api.devnet.solana.com", "confirmed")
+//   const umi = createUmi(solanaConnection).use(mplCore()).use(irysUploader());
+//   const secretKeyUint8Array = bs58.decode(process.env.SERVER_WALLET_SK!)
+//   const userWallet = Keypair.fromSecretKey(Uint8Array.from(secretKeyUint8Array));
+//   const myKeypair = umi.eddsa.createKeypairFromSecretKey(userWallet.secretKey);
+//   const myKeypairSigner: KeypairSigner = createSignerFromKeypair(umi, myKeypair);
+//   umi.use(signerIdentity(myKeypairSigner));
+//   const uri = await umi.uploader.uploadJson(metaData);
+//   return uri;
+// }
 
 export const createMetaplexCollectionNft = async (
   name: string,
@@ -59,18 +62,17 @@ export const createMetaplexCollectionNft = async (
   creator_url: string,
   attributesList: Attribute[],
   plugins: any[],
-  network: "mainnet" | "devnet",
   creator: PublicKey,
   feePayer: PublicKey
 ) => {
   try {
     validateImageUri(imageUri);
-    const umi = createUmiUploader(network);
+    const umi = createUmiUploader();
     const umiCreatorPublicKey = fromWeb3JsPublicKey(creator);
     const collectionSigner = createNoopSigner(umiCreatorPublicKey);
     umi.use(signerIdentity(collectionSigner));
 
-    const uri = await uploadJsonUmi(network, {
+    const uri = await uploadJsonUmi({
       symbol: symbol,
       description: description,
       image: imageUri,
@@ -128,7 +130,7 @@ export const createMetaplexCollectionNft = async (
   }
 };
 
-export const createMetaplexNft = async (
+export const createMetaplexNftInCollection = async (
   name: string,
   symbol: string,
   description: string,
@@ -139,19 +141,18 @@ export const createMetaplexNft = async (
   attributesList: Attribute[],
   plugins: any[],
   collectionAddress: PublicKey,
-  network: "mainnet" | "devnet",
   creator: PublicKey,
   feePayer: PublicKey
 ) => {
   try {
-    const umi = createUmiUploader(network);
+    const umi = createUmiUploader();
     const umiCreatorPublicKey = fromWeb3JsPublicKey(creator);
     const umiCollectionAddress = fromWeb3JsPublicKey(collectionAddress);
     const assetSigner = createNoopSigner(umiCreatorPublicKey);
     const collection = await fetchCollection(umi, umiCollectionAddress);
     umi.use(signerIdentity(assetSigner));
 
-    const uri = await uploadJsonUmi(network, {
+    const uri = await uploadJsonUmi({
       name: name,
       symbol: symbol,
       description: description,
@@ -210,12 +211,74 @@ export const createMetaplexNft = async (
   }
 };
 
-export const fetchSingleAsset = async (
-  assetAddress: PublicKey,
-  network: "mainnet" | "devnet"
+export const createMetaplexNft = async (
+  name: string,
+  symbol: string,
+  description: string,
+  imageUri: string,
+  animation_url: string,
+  external_url: string,
+  creator_url: string,
+  attributesList: any[],
+  plugins: any[],
+  creator: PublicKey,
 ) => {
   try {
-    const umi = createUmiUploader(network);
+    const umi = createUmiUploader();
+    const umiCreatorPublicKey = fromWeb3JsPublicKey(creator);
+    const assetSigner = createNoopSigner(umiCreatorPublicKey);
+
+    umi.use(signerIdentity(assetSigner));
+    const umiSigner = generateSigner(umi);
+    const uri = await uploadJsonUmi({
+      name: name,
+      symbol: symbol,
+      description: description,
+      image: imageUri,
+      animation_url: animation_url,
+      external_url: external_url,
+      creator_url: creator_url,
+      attributes: attributesList,
+      properties: {
+        files: [
+          {
+            uri: `${imageUri}`,
+            type: "image/svg",
+          },
+        ],
+        category: "image",
+        creators: [
+          {
+            address: creator.toBase58(),
+            share: 100,
+          },
+        ],
+      },
+    })
+    const txBuilder = await create(umi, {
+      asset: umiSigner,
+      name: name,
+      uri,
+      plugins: [
+        ...plugins,
+        {
+          type: "Attributes",
+          attributeList: attributesList,
+        },
+      ],
+    }).buildAndSign(umi);
+    return umi.transactions.serialize(txBuilder);
+  } catch (error) {
+    console.error("Error creating metaplex nft", error);
+    throw error;
+  }
+};
+
+export const fetchSingleAsset = async (
+  assetAddress: PublicKey,
+) => {
+  try {
+    const umi = createUmiUploader();
     const umiAssetAddress = fromWeb3JsPublicKey(assetAddress);
 
     const asset = await fetchAsset(umi, umiAssetAddress);
@@ -228,10 +291,9 @@ export const fetchSingleAsset = async (
 
 export const fetchAssetsByCollectionAddress = async (
   collectionAddress: PublicKey,
-  network: "mainnet" | "devnet"
 ) => {
   try {
-    const umi = createUmiUploader(network);
+    const umi = createUmiUploader();
     const umiCollectionAddress = fromWeb3JsPublicKey(collectionAddress);
 
     const assets = await fetchAssetsByCollection(umi, umiCollectionAddress);

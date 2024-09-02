@@ -32,5 +32,17 @@ export const ProductInfoSchema = z.object({
   account: z.string(),
 });
 
+export const ShippingDetailsSchema = z.object({
+  shippingName: z.string(),
+  shippingEmail: z.string().email(),
+  shippingPhone: z.string().nullable().optional(),
+  shippingAddress: z.string(),
+  shippingCity: z.string(),
+  shippingStateProvince: z.string(),
+  shippingCountryRegion: z.string(),
+  shippingZipCode: z.string(),
+});
+
 export type ProductType = z.infer<typeof ProductTypeSchema>;
 export type ProductInfo = z.infer<typeof ProductInfoSchema>;
+export type ShippingInfo = z.infer<typeof ShippingDetailsSchema>;
