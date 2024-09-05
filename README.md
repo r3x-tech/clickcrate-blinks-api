@@ -1,6 +1,5 @@
-# Creator Blink API
-Collection of Clickcrate e-commerce blinks
-
+# ClickCrate Blinks & Actions API
+Collection of ClickCrate e-commerce blinks & actions
 
 
 **/creator** - Create e-commerce merch blinks in a blink
