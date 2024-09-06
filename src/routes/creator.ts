@@ -17,7 +17,7 @@ router.get("/", (req, res) => {
   try {
     const responseBody: ActionGetResponse = {
       icon: "https://shdw-drive.genesysgo.net/CiJnYeRgNUptSKR4MmsAPn7Zhp6LSv91ncWTuNqDLo7T/horizontalmerchcreatoricon.png",
-      label: "START CREATING",
+      label: "CREATE",
       type: "action",
       title: "ClickCrate Merch Creator",
       description:
@@ -26,7 +26,7 @@ router.get("/", (req, res) => {
         actions: [
           {
             href: `/creator/create-product`,
-            label: "START CREATING",
+            label: "CREATE",
             parameters: [
               {
                 name: "type",
@@ -226,7 +226,7 @@ router.post("/create-product", async (req, res) => {
         // listingCollectionNft.publicKey,
         new PublicKey(account), // need to remove and get actual listingCollectionNft.publicKey,
         new PublicKey(account),
-        publicKey,
+        publicKey
       );
       productNfts.push(productNft);
     }
