@@ -26,7 +26,7 @@ router.get("/", (req, res) => {
       type: "action",
       title: "Enter your shipping address",
       description:
-        "Create and mint an NFT that has your shipping info tied to it. This NFT can later be used to auto-fill your shipping info ",
+        "Create and mint an encrypted NFT of your shipping info. You can later use this NFT to auto-fill your shipping info and checkout in one click in any ClickCrate blink.",
       links: {
         actions: [
           {
@@ -47,7 +47,7 @@ router.get("/", (req, res) => {
               },
               {
                 name: "shippingPhone",
-                label: "Phone number",
+                label: "Phone # (including country code)",
                 required: true,
                 type: "text",
               },
@@ -138,7 +138,7 @@ router.post("/create-shipping-info-nft", async (req, res) => {
       const responseBody: ActionPostResponse = {
         transaction: Buffer.from(shippingInfoNftTransaction).toString("base64"),
         message:
-          "NFTs created. Please check your email for the verification code.",
+          "Shipping Autofill NFT created. Please check your wallet to view you NFT.",
       };
       res.status(200).json(responseBody);
     } else {
