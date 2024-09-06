@@ -123,10 +123,10 @@ router.post("/create-shipping-info-nft", async (req, res) => {
       );
       const shippingInfoNftTransaction =
         await MetaplexService.createMetaplexNft(
-          "ClickCrate NFT",
-          "PNFT",
-          `Shipping NFT`,
-          "https://shdw-drive.genesysgo.net/CiJnYeRgNUptSKR4MmsAPn7Zhp6LSv91ncWTuNqDLo7T/horizontalmerchcreatoricon.png",
+          "ClickCrate Autofill",
+          "CCAFL",
+          `ClickCrate Autofill`,
+          "https://shdw-drive.genesysgo.net/CiJnYeRgNUptSKR4MmsAPn7Zhp6LSv91ncWTuNqDLo7T/autofill_checkout_button_bottom.png",
           "",
           "",
           "",
