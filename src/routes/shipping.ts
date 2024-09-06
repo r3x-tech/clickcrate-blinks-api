@@ -24,9 +24,9 @@ router.get("/", (req, res) => {
       icon: "https://shdw-drive.genesysgo.net/CiJnYeRgNUptSKR4MmsAPn7Zhp6LSv91ncWTuNqDLo7T/autofill_checkout_button_bottom.png",
       label: "Shipping address",
       type: "action",
-      title: "Enter your shipping address",
+      title: "ClickCrate Shipping Autofill",
       description:
-        "Create and mint an encrypted NFT of your shipping info. You can later use this NFT to auto-fill your shipping info and checkout in one click in any ClickCrate blink.",
+        "Create and mint an encrypted NFT of your shipping info. You can later use this NFT to auto-fill your shipping info and checkout in one click in any ClickCrate e-commerce blink.",
       links: {
         actions: [
           {
