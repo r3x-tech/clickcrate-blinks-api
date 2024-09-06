@@ -138,7 +138,7 @@ router.post("/create-shipping-info-nft", async (req, res) => {
       const responseBody: ActionPostResponse = {
         transaction: Buffer.from(shippingInfoNftTransaction).toString("base64"),
         message:
-          "Shipping Autofill NFT created. Please check your wallet to view you NFT.",
+          "Shipping autofill NFT created successfully! Please check your wallet to view your NFT.",
       };
       res.status(200).json(responseBody);
     } else {
