@@ -132,7 +132,8 @@ router.post("/create-shipping-info-nft", async (req, res) => {
           "",
           [{ trait_type: "shippingInfo", value: encryptedShippingInfo }],
           [{ type: "FreezeDelegate", data: { frozen: true } }],
-          publicKey
+          publicKey,
+          "mainnet"
         );
 
       const responseBody: ActionPostResponse = {

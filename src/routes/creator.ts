@@ -120,19 +120,16 @@ router.post("/create-product", async (req, res) => {
       return res.status(400).json({ error: "Invalid product type" });
     }
 
-    // Create all NFTs
     const {
       totalCost,
       posTxSignature,
       listingTxSignature,
       productNfts,
       listingCollectionNftAddress,
-    } = await createProducts(productInfo, publicKey);
+    } = await createProducts(productInfo, publicKey, "devnet");
 
-    // Create a balance transfer transaction for the total cost
     const relayTx = await relayPaymentTransaction(totalCost, publicKey);
 
-    // Initiate verification
     await axios.post(`${CLICKCRATE_API_URL}/initiate-verification`, { email });
 
     const responseBody: ActionPostResponse = {

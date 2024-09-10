@@ -133,13 +133,11 @@ async function signAndSendTransaction(
 
     const serializedTransaction = versionedTransaction.serialize();
 
-    // Send the serialized transaction
     const txId = await connection.sendRawTransaction(serializedTransaction, {
       skipPreflight: false,
     });
     console.log(`Transaction sent with ID: ${txId}`);
 
-    // Confirm the transaction
     const confirmation = await connection.confirmTransaction(txId, "confirmed");
     console.log(`Transaction confirmed: `, confirmation);
 
@@ -173,7 +171,11 @@ async function simulateAndGetCost(tx: VersionedTransaction): Promise<number> {
   return Math.ceil(estimatedCostInLamports);
 }
 
-async function createProducts(productInfo: ProductInfo, publicKey: PublicKey) {
+async function createProducts(
+  productInfo: ProductInfo,
+  publicKey: PublicKey,
+  network: "devnet" | "mainnet"
+) {
   const { name, imageUri, description, quantity, account } = productInfo;
   let totalCost = 0;
 
@@ -195,7 +197,8 @@ async function createProducts(productInfo: ProductInfo, publicKey: PublicKey) {
     ],
     [],
     publicKey,
-    relayWalletKeypair.publicKey
+    relayWalletKeypair.publicKey,
+    "devnet"
   );
 
   totalCost += await simulateAndGetCost(posCollectionNftTx);
@@ -225,7 +228,8 @@ async function createProducts(productInfo: ProductInfo, publicKey: PublicKey) {
       ],
       [],
       publicKey,
-      relayWalletKeypair.publicKey
+      relayWalletKeypair.publicKey,
+      network
     );
 
   totalCost += await simulateAndGetCost(listingCollectionNftTx);
@@ -271,7 +275,8 @@ async function createProducts(productInfo: ProductInfo, publicKey: PublicKey) {
       [],
       new PublicKey(listingCollectionNftAddress),
       publicKey,
-      relayWalletKeypair.publicKey
+      relayWalletKeypair.publicKey,
+      network
     );
 
     totalCost += await simulateAndGetCost(productNftTx);
