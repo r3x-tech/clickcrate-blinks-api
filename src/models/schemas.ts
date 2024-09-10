@@ -22,12 +22,24 @@ export const ProductTypes = [
 ] as const;
 
 export const ProductInfoSchema = z.object({
-  type: ProductTypeSchema,
+  type: z.enum(["tshirt", "hoodie", "hat"]),
   imageUri: z.string().url(),
   name: z.string().min(1).max(100),
   description: z.string().max(500),
-  quantity: z.number().int().min(1).max(3),
-  unitPrice: z.number().positive(),
+  quantity: z.union([
+    z.number().int().min(1).max(3),
+    z
+      .string()
+      .regex(/^[1-3]$/)
+      .transform(Number),
+  ]),
+  unitPrice: z.union([
+    z.number().positive(),
+    z
+      .string()
+      .regex(/^\d+(\.\d+)?$/)
+      .transform(Number),
+  ]),
   email: z.string().email(),
   account: z.string(),
 });

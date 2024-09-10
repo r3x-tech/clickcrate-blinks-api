@@ -117,10 +117,17 @@ router.post("/create-product", async (req, res) => {
   try {
     console.log("Received data:", req.body);
     const publicKey = new PublicKey(req.body.account);
+
+    // Extract the data from the nested structure
+    const productData = {
+      ...req.body.data,
+      account: req.body.account,
+    };
+
     const productInfo = ProductInfoSchema.parse({
-      ...req.body,
-      quantity: parseInt(req.body.quantity, 10),
-      unitPrice: parseFloat(req.body.unitPrice),
+      ...productData,
+      quantity: parseInt(productData.quantity, 10),
+      unitPrice: parseFloat(productData.unitPrice),
     });
 
     const {
@@ -134,10 +141,13 @@ router.post("/create-product", async (req, res) => {
       email,
     } = productInfo;
 
-    const productType = ProductTypes.find((pt) => pt.label === type);
+    const productType = ProductTypes.find((pt) => pt.value === type);
     if (!productType) {
       return res.status(400).json({ error: "Invalid product type" });
     }
+
+    // Use productType.label when you need the full product type name
+    const fullProductTypeName = productType.label;
 
     const {
       totalCost,
