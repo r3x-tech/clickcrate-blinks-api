@@ -140,9 +140,15 @@ export const createMetaplexCollectionNft = async (
     }).prepend(setComputeUnitPrice(umi, { microLamports: 1000 }));
     console.log("Collection created");
 
-    if (!txBuilder || txBuilder.getBlockhash() == undefined) {
-      console.error("txBuilder or blockhash is undefined");
+    if (!txBuilder) {
+      console.error("txBuilder is undefined");
       throw Error("Failed to retrieve builder");
+    }
+    console.log("txBuilder is:", JSON.stringify(txBuilder));
+
+    if (txBuilder.getBlockhash() == undefined) {
+      console.error("txBuilder blockhash is undefined");
+      throw Error("Failed to retrieve blockhash");
     }
     console.log("Blockhash retrieved:", txBuilder.getBlockhash());
 
