@@ -1,3 +1,7 @@
-# Creator Blink API
+# ClickCrate Blinks & Actions API
+Collection of ClickCrate e-commerce blinks & actions
 
-Create e-commerce blinks in a blink
+
+**/creator** - Create e-commerce merch blinks in a blink
+
+**/shipping** - Create an encrypted shipping autofill NFT to use with ClickCrate blinks and checkout in a click, no form input required
