@@ -125,20 +125,27 @@ export const createMetaplexCollectionNft = async (
     console.log("JSON uploaded, URI:", uri);
 
     console.log("Creating collection");
-    const txBuilder = createCollection(umi, {
-      collection: collectionSigner,
-      name,
-      uri,
-      updateAuthority: umiCreatorPublicKey,
-      plugins: [
-        ...plugins,
-        {
-          type: "Attributes",
-          attributeList: attributesList,
-        },
-      ],
-    }).prepend(setComputeUnitPrice(umi, { microLamports: 1000 }));
-    console.log("Collection created");
+    let txBuilder;
+    try {
+      txBuilder = createCollection(umi, {
+        collection: collectionSigner,
+        name,
+        uri,
+        updateAuthority: umiCreatorPublicKey,
+        plugins: [
+          ...plugins,
+          {
+            type: "Attributes",
+            attributeList: attributesList,
+          },
+        ],
+      });
+      // }).prepend(setComputeUnitPrice(umi, { microLamports: 1000 }));
+      console.log("Collection created");
+    } catch (error) {
+      console.error("Error creating collection:", error);
+      throw error;
+    }
 
     if (!txBuilder) {
       console.error("txBuilder is undefined");
@@ -241,7 +248,8 @@ export const createMetaplexNftInCollection = async (
           attributeList: attributesList,
         },
       ],
-    }).prepend(setComputeUnitPrice(umi, { microLamports: 1000 }));
+      // }).prepend(setComputeUnitPrice(umi, { microLamports: 1000 }));
+    });
 
     if (!txBuilder || txBuilder.getBlockhash() == undefined) {
       throw Error("Failed to retrieve builder");
