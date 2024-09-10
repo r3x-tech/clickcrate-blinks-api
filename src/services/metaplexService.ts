@@ -17,7 +17,7 @@ import { irysUploader } from "@metaplex-foundation/umi-uploader-irys";
 import { fromWeb3JsPublicKey } from "@metaplex-foundation/umi-web3js-adapters";
 import { setComputeUnitPrice } from "@metaplex-foundation/mpl-toolbox";
 import { convertMetaplexInstructionToTransactionInstruction } from "../utils/conversions";
-import { validateImageUri } from "../utils/imageValidator";
+import { getMimeType, validateImageUri } from "../utils/imageValidator";
 import bs58 from "bs58";
 import {
   Attribute,
@@ -31,7 +31,7 @@ import {
 
 const createUmiUploader = (network: "devnet" | "mainnet") => {
   const rpcUrl =
-    process.env.NODE_ENV === "development"
+    network === "devnet"
       ? process.env.SOLANA_DEVNET_RPC_URL
       : process.env.SOLANA_MAINNET_RPC_URL;
   const solanaConnection = new Connection(rpcUrl!, "confirmed");
@@ -82,11 +82,18 @@ export const createMetaplexCollectionNft = async (
   network: "devnet" | "mainnet"
 ) => {
   try {
-    validateImageUri(imageUri);
+    console.log("Starting createMetaplexCollectionNft");
+    const extension = validateImageUri(imageUri);
+    const mimeType = getMimeType(extension);
+    console.log(
+      `Image validated. Extension: ${extension}, MIME type: ${mimeType}`
+    );
     const umi = createUmiUploader(network);
+    console.log("Umi created");
     const umiCreatorPublicKey = fromWeb3JsPublicKey(creator);
     const collectionSigner = createNoopSigner(umiCreatorPublicKey);
     umi.use(signerIdentity(collectionSigner));
+    console.log("Signer set up");
 
     const uri = await uploadJsonUmi(
       {
@@ -101,7 +108,7 @@ export const createMetaplexCollectionNft = async (
           files: [
             {
               uri: `${imageUri}`,
-              type: "image/svg",
+              type: mimeType,
             },
           ],
           category: "image",
@@ -115,7 +122,9 @@ export const createMetaplexCollectionNft = async (
       },
       network
     );
+    console.log("JSON uploaded, URI:", uri);
 
+    console.log("Creating collection");
     const txBuilder = createCollection(umi, {
       collection: collectionSigner,
       name,
@@ -129,11 +138,17 @@ export const createMetaplexCollectionNft = async (
         },
       ],
     }).prepend(setComputeUnitPrice(umi, { microLamports: 1000 }));
+    console.log("Collection created");
 
     if (!txBuilder || txBuilder.getBlockhash() == undefined) {
+      console.error("txBuilder or blockhash is undefined");
       throw Error("Failed to retrieve builder");
     }
+    console.log("Blockhash retrieved:", txBuilder.getBlockhash());
+
     const ixs = txBuilder.getInstructions();
+    console.log("Instructions retrieved:", ixs.length);
+
     const msg = new TransactionMessage({
       payerKey: feePayer,
       recentBlockhash: txBuilder.getBlockhash() as string,
@@ -141,6 +156,7 @@ export const createMetaplexCollectionNft = async (
         ...ixs.map(convertMetaplexInstructionToTransactionInstruction),
       ],
     }).compileToV0Message();
+    console.log("Transaction message compiled");
 
     return new VersionedTransaction(msg);
   } catch (error) {
@@ -165,6 +181,12 @@ export const createMetaplexNftInCollection = async (
   network: "devnet" | "mainnet"
 ) => {
   try {
+    const extension = validateImageUri(imageUri);
+    const mimeType = getMimeType(extension);
+    console.log(
+      `Image validated. Extension: ${extension}, MIME type: ${mimeType}`
+    );
+
     const umi = createUmiUploader(network);
     const umiCreatorPublicKey = fromWeb3JsPublicKey(creator);
     const umiCollectionAddress = fromWeb3JsPublicKey(collectionAddress);
@@ -186,7 +208,7 @@ export const createMetaplexNftInCollection = async (
           files: [
             {
               uri: `${imageUri}`,
-              type: "image/svg",
+              type: mimeType,
             },
           ],
           category: "image",
@@ -248,6 +270,12 @@ export const createMetaplexNft = async (
   network: "devnet" | "mainnet"
 ) => {
   try {
+    const extension = validateImageUri(imageUri);
+    const mimeType = getMimeType(extension);
+    console.log(
+      `Image validated. Extension: ${extension}, MIME type: ${mimeType}`
+    );
+
     const umi = createUmiUploader(network);
     const umiCreatorPublicKey = fromWeb3JsPublicKey(creator);
     const assetSigner = createNoopSigner(umiCreatorPublicKey);
@@ -268,7 +296,7 @@ export const createMetaplexNft = async (
           files: [
             {
               uri: `${imageUri}`,
-              type: "image/svg",
+              type: mimeType,
             },
           ],
           category: "image",

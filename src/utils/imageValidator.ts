@@ -35,3 +35,15 @@ export const validateImageUri = (imageUri: string) => {
     return extension;
   }
 };
+
+export function getMimeType(extension: string): string {
+  switch (extension.toLowerCase()) {
+    case "png":
+      return "image/png";
+    case "svg":
+      return "image/svg";
+    // Add more cases if you decide to support more file types in the future
+    default:
+      throw new Error(`Unsupported file type: ${extension}`);
+  }
+}
