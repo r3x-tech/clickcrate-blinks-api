@@ -6,7 +6,11 @@ import {
   ProductTypeSchema,
   ProductTypes,
 } from "../models/schemas";
-import { ActionGetResponse, ActionPostResponse } from "@solana/actions";
+import {
+  ActionGetResponse,
+  ActionPostResponse,
+  ACTIONS_CORS_HEADERS_MIDDLEWARE,
+} from "@solana/actions";
 import * as MetaplexService from "../services/metaplexService";
 import {
   createProducts,
@@ -15,6 +19,21 @@ import {
 import { z } from "zod";
 
 const router = express.Router();
+const blinkCorsMiddleware = (
+  req: express.Request,
+  res: express.Response,
+  next: express.NextFunction
+) => {
+  res.set(ACTIONS_CORS_HEADERS_MIDDLEWARE);
+  if (req.method === "OPTIONS") {
+    return res.status(200).json({
+      body: "OK",
+    });
+  }
+  next();
+};
+router.use(blinkCorsMiddleware);
+
 const CLICKCRATE_API_URL = process.env.CLICKCRATE_API_URL;
 
 // Step 1: Choose product type and provide product info (GET)
