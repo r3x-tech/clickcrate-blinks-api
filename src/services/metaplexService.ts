@@ -21,7 +21,6 @@ import {
 } from "@metaplex-foundation/js";
 import { ProductInfo } from "../models/schemas";
 
-//TODO: Upgrade to create nft collections and nfts using Metaplex Core. Both should include including the attribute plugin and attributes in plugin should match those in JSON perfectly.
 const connection = new Connection(process.env.SOLANA_RPC_URL!);
 const keypair = Keypair.fromSecretKey(
   Buffer.from(JSON.parse(process.env.WALLET_PRIVATE_KEY!))
@@ -34,7 +33,7 @@ import { irysUploader } from "@metaplex-foundation/umi-uploader-irys";
 import { fromWeb3JsPublicKey } from "@metaplex-foundation/umi-web3js-adapters";
 import { setComputeUnitPrice } from "@metaplex-foundation/mpl-toolbox";
 import { convertMetaplexInstructionToTransactionInstruction } from "../utils/conversions";
-import { validateImageUri } from "../utils/serviceHelpers";
+import { validateImageUri } from "../utils/imageValidator";
 import bs58 from "bs58";
 import {
   Attribute,

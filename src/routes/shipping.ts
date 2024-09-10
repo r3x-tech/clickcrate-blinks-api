@@ -11,9 +11,9 @@ import {
   validateShippingCountryRegion,
   validateShippingStateProvince,
   validateShippingZipCode,
-} from "../utils/helpers";
+} from "../utils/encryptionHelpers";
 import * as MetaplexService from "../services/metaplexService";
-import { encryptShippingInfo } from "../utils/helpers";
+import { encryptShippingInfo } from "../utils/encryptionHelpers";
 
 const router = express.Router();
 const CLICKCRATE_API_URL = process.env.CLICKCRATE_API_URL;
