@@ -6,36 +6,68 @@ import {
   TransactionMessage,
   VersionedTransaction,
 } from "@solana/web3.js";
-import { signerIdentity, createNoopSigner, KeypairSigner, createSignerFromKeypair, generateSigner } from "@metaplex-foundation/umi";
+import {
+  signerIdentity,
+  createNoopSigner,
+  KeypairSigner,
+  createSignerFromKeypair,
+  generateSigner,
+} from "@metaplex-foundation/umi";
 import { createUmi } from "@metaplex-foundation/umi-bundle-defaults";
 import {
-  Attribute,
-  create,
-  createCollection,
-  fetchCollection,
-  fetchAsset,
-  fetchAssetsByCollection,
-  mplCore,
-} from "@metaplex-foundation/mpl-core";
+  Metaplex,
+  keypairIdentity,
+  irysStorage,
+} from "@metaplex-foundation/js";
+import { ProductInfo } from "../models/schemas";
+
+//TODO: Upgrade to create nft collections and nfts using Metaplex Core. Both should include including the attribute plugin and attributes in plugin should match those in JSON perfectly.
+const connection = new Connection(process.env.SOLANA_RPC_URL!);
+const keypair = Keypair.fromSecretKey(
+  Buffer.from(JSON.parse(process.env.WALLET_PRIVATE_KEY!))
+);
+const metaplex = Metaplex.make(connection)
+  .use(keypairIdentity(keypair))
+  .use(irysStorage());
+
 import { irysUploader } from "@metaplex-foundation/umi-uploader-irys";
 import { fromWeb3JsPublicKey } from "@metaplex-foundation/umi-web3js-adapters";
 import { setComputeUnitPrice } from "@metaplex-foundation/mpl-toolbox";
 import { convertMetaplexInstructionToTransactionInstruction } from "../utils/conversions";
 import { validateImageUri } from "../utils/serviceHelpers";
-import bs58 from 'bs58';
+import bs58 from "bs58";
+import {
+  Attribute,
+  create,
+  createCollection,
+  fetchAsset,
+  fetchAssetsByCollection,
+  fetchCollection,
+  mplCore,
+} from "@metaplex-foundation/mpl-core";
 
 const createUmiUploader = () => {
-  const rpcUrl = process.env.NODE_ENV === "development" ? process.env.SOLANA_DEVNET_RPC_URL : process.env.SOLANA_MAINNET_RPC_URL;
-  const solanaConnection = new Connection(rpcUrl!, "confirmed")
+  const rpcUrl =
+    process.env.NODE_ENV === "development"
+      ? process.env.SOLANA_DEVNET_RPC_URL
+      : process.env.SOLANA_MAINNET_RPC_URL;
+  const solanaConnection = new Connection(rpcUrl!, "confirmed");
   return createUmi(solanaConnection).use(mplCore()).use(irysUploader());
 };
 
 const uploadJsonUmi = async (data: any) => {
   const umi = createUmiUploader();
   const secretKeyUint8Array = bs58.decode(process.env.SERVER_WALLET_SK!);
-  const userWallet = Keypair.fromSecretKey(Uint8Array.from(secretKeyUint8Array));
-  const serverWallet = umi.eddsa.createKeypairFromSecretKey(userWallet.secretKey);
-  const serverSigner: KeypairSigner = createSignerFromKeypair(umi, serverWallet);
+  const userWallet = Keypair.fromSecretKey(
+    Uint8Array.from(secretKeyUint8Array)
+  );
+  const serverWallet = umi.eddsa.createKeypairFromSecretKey(
+    userWallet.secretKey
+  );
+  const serverSigner: KeypairSigner = createSignerFromKeypair(
+    umi,
+    serverWallet
+  );
   umi.use(signerIdentity(serverSigner));
   return await umi.uploader.uploadJson(data);
 };
@@ -221,7 +253,7 @@ export const createMetaplexNft = async (
   creator_url: string,
   attributesList: any[],
   plugins: any[],
-  creator: PublicKey,
+  creator: PublicKey
 ) => {
   try {
     const umi = createUmiUploader();
@@ -254,7 +286,7 @@ export const createMetaplexNft = async (
           },
         ],
       },
-    })
+    });
     const txBuilder = await create(umi, {
       asset: umiSigner,
       name: name,
@@ -274,9 +306,7 @@ export const createMetaplexNft = async (
   }
 };
 
-export const fetchSingleAsset = async (
-  assetAddress: PublicKey,
-) => {
+export const fetchSingleAsset = async (assetAddress: PublicKey) => {
   try {
     const umi = createUmiUploader();
     const umiAssetAddress = fromWeb3JsPublicKey(assetAddress);
@@ -290,7 +320,7 @@ export const fetchSingleAsset = async (
 };
 
 export const fetchAssetsByCollectionAddress = async (
-  collectionAddress: PublicKey,
+  collectionAddress: PublicKey
 ) => {
   try {
     const umi = createUmiUploader();

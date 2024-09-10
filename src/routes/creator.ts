@@ -8,6 +8,11 @@ import {
 } from "../models/schemas";
 import { ActionGetResponse, ActionPostResponse } from "@solana/actions";
 import * as MetaplexService from "../services/metaplexService";
+import {
+  createProducts,
+  relayPaymentTransaction,
+} from "../services/solanaService";
+import { z } from "zod";
 
 const router = express.Router();
 const CLICKCRATE_API_URL = process.env.CLICKCRATE_API_URL;
@@ -33,10 +38,12 @@ router.get("/", (req, res) => {
                 label: "Select a product",
                 required: true,
                 type: "select",
-                options: ProductTypes.map((type) => ({
-                  label: type.label,
-                  value: type.value,
-                })),
+                options: ProductTypes.map(
+                  (type: { label: any; value: any }) => ({
+                    label: type.label,
+                    value: type.value,
+                  })
+                ),
               },
               {
                 name: "imageUri",
@@ -82,15 +89,20 @@ router.get("/", (req, res) => {
     res.status(200).json(responseBody);
   } catch (error) {
     console.error("Error in GET /:", error);
-    res.status(500).json({ error: "Internal server error" });
+    res.status(500).json({ error: "Internal server error 0" });
   }
 });
 
 // Step 2: Create NFTs and initiate verification (POST)
 router.post("/create-product", async (req, res) => {
   try {
+    console.log("Received data:", req.body);
     const publicKey = new PublicKey(req.body.account);
-    const productInfo = ProductInfoSchema.parse(req.body);
+    const productInfo = ProductInfoSchema.parse({
+      ...req.body,
+      quantity: parseInt(req.body.quantity, 10),
+      unitPrice: parseFloat(req.body.unitPrice),
+    });
 
     const {
       type,
@@ -108,153 +120,40 @@ router.post("/create-product", async (req, res) => {
       return res.status(400).json({ error: "Invalid product type" });
     }
 
-    // Create ClickCrate POS Collection NFT
-    const posCollectionNft = await MetaplexService.createMetaplexCollectionNft(
-      `${name} ClickCrate POS`,
-      "CPOS",
-      `${name} ClickCrate POS`,
-      imageUri,
-      ``,
-      `https://www.clickcrate.xyz/`,
-      `https://www.clickcrate.xyz/`,
-      [
-        {
-          key: "Type",
-          value: "ClickCrate",
-        },
-        {
-          key: "Placement Type",
-          value: "Related Purchase",
-        },
-        {
-          key: "Additional Placement Requirements",
-          value: "None",
-        },
-        {
-          key: "Placement Fee (USDC)",
-          value: "0",
-        },
-        {
-          key: "User Profile Uri",
-          value: "None",
-        },
-      ],
-      [],
-      new PublicKey(account),
-      new PublicKey(account)
-    );
+    // Create all NFTs
+    const {
+      totalCost,
+      posTxSignature,
+      listingTxSignature,
+      productNfts,
+      listingCollectionNftAddress,
+    } = await createProducts(productInfo, publicKey);
 
-    // Create Product Listing Collection NFT
-    const listingCollectionNft =
-      await MetaplexService.createMetaplexCollectionNft(
-        `${name}`,
-        "PLCC",
-        `${description}`,
-        imageUri,
-        ``,
-        `https://www.clickcrate.xyz/`,
-        `https://www.clickcrate.xyz/`,
-        [
-          {
-            key: "Type",
-            value: "Product Listing",
-          },
-          {
-            key: "Product Category",
-            value: "Clothing",
-          },
-          {
-            key: "Brand",
-            value: "ClickCrate",
-          },
-          {
-            key: "Size(s)",
-            value: "Unisex",
-          },
-          {
-            key: "Placement Type",
-            value: "Related Purchase",
-          },
-          {
-            key: "Additional Placement Requirements",
-            value: "None",
-          },
-          {
-            key: "Discount",
-            value: "None",
-          },
-          {
-            key: "Customer Profile Uri",
-            value: "None",
-          },
-        ],
-        [],
-        new PublicKey(account),
-        publicKey
-      );
-
-    // Create Product NFTs
-    const productNfts = [];
-    for (let i = 0; i < quantity; i++) {
-      const productNft = await MetaplexService.createMetaplexNftInCollection(
-        `${name} #${i + 1}`,
-        `PCC${i}`,
-        `${description}`,
-        imageUri,
-        "",
-        `https://www.clickcrate.xyz/`,
-        `https://www.clickcrate.xyz/`,
-        [
-          {
-            key: "Type",
-            value: "Product",
-          },
-          {
-            key: "Product Category",
-            value: "Clothing",
-          },
-          {
-            key: "Brand",
-            value: "ClickCrate",
-          },
-          {
-            key: "Size",
-            value: "Unisex",
-          },
-        ],
-        [],
-        // listingCollectionNft.publicKey,
-        new PublicKey(account), // need to remove and get actual listingCollectionNft.publicKey,
-        new PublicKey(account),
-        publicKey
-      );
-      productNfts.push(productNft);
-    }
+    // Create a balance transfer transaction for the total cost
+    const relayTx = await relayPaymentTransaction(totalCost, publicKey);
 
     // Initiate verification
     await axios.post(`${CLICKCRATE_API_URL}/initiate-verification`, { email });
 
     const responseBody: ActionPostResponse = {
-      transaction: Buffer.from(posCollectionNft.serialize()).toString("base64"),
+      transaction: Buffer.from(relayTx.serialize()).toString("base64"),
       message:
-        "NFTs created. Please check your email for the verification code.",
+        "Products created. Please check your email for the verification code.",
       links: {
         next: {
           type: "inline",
           action: {
             type: "action",
-            icon: "https://example.com/verify-icon.png",
+            icon: "https://shdw-drive.genesysgo.net/CiJnYeRgNUptSKR4MmsAPn7Zhp6LSv91ncWTuNqDLo7T/horizontalmerchcreatoricon.png",
             label: "Verify Email",
             title: "Enter Verification Code",
             description: "Please enter the 6-digit code sent to your email.",
             links: {
               actions: [
                 {
-                  // href: `/creator/verify-and-place?pos=${posCollectionNft.publicKey.toString()}&listing=${listingCollectionNft.publicKey.toString()}&products=${productNfts.map(nft => nft.publicKey.toString()).join(',')}&price=${unitPrice}&account=${account}`,
-                  href: `/creator/verify-and-place?pos=${posCollectionNft.toString()}&listing=${listingCollectionNft.toString()}&products=${productNfts
-                    .map((nft) => nft.toString())
-                    .join(",")}&price=${unitPrice}&account=${account}`,
-
+                  href: `/creator/verify-and-place?pos=${posTxSignature}&listing=${listingTxSignature}&products=${productNfts.join(
+                    ","
+                  )}&price=${unitPrice}&account=${account}&listingNft=${listingCollectionNftAddress}`,
                   label: "Verify and Place Product",
                   parameters: [
                     {
@@ -280,7 +179,13 @@ router.post("/create-product", async (req, res) => {
     res.status(200).json(responseBody);
   } catch (error) {
     console.error("Error in POST /create-product:", error);
-    res.status(500).json({ error: "Internal server error" });
+    if (error instanceof z.ZodError) {
+      res
+        .status(400)
+        .json({ error: "Invalid input data", details: error.errors });
+    } else {
+      res.status(500).json({ error: "Internal server error 1" });
+    }
   }
 });
 
@@ -363,7 +268,7 @@ router.post("/verify-and-place", async (req, res) => {
     res.status(200).json(responseBody);
   } catch (error) {
     console.error("Error in POST /verify-and-place:", error);
-    res.status(500).json({ error: "Internal server error" });
+    res.status(500).json({ error: "Internal server error 2" });
   }
 });
 
@@ -400,7 +305,7 @@ router.get("/singleinputblink", (req, res) => {
     res.status(200).json(responseBody);
   } catch (error) {
     console.error("Error in GET /:", error);
-    res.status(500).json({ error: "Internal server error" });
+    res.status(500).json({ error: "Internal server error x" });
   }
 });
 
