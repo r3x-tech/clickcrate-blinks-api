@@ -1,16 +1,16 @@
 export const supportedMediaFiles = [
-  "jpg",
-  "jpeg",
+  // "jpg",
+  // "jpeg",
   "png",
-  "gif",
+  // "gif",
   "svg",
-  "mp4",
-  "mov",
-  "webm",
-  "mp3",
-  "wav",
-  "glb",
-  "gltf",
+  // "mp4",
+  // "mov",
+  // "webm",
+  // "mp3",
+  // "wav",
+  // "glb",
+  // "gltf",
 ];
 
 export const validateImageUri = (imageUri: string) => {
@@ -27,7 +27,8 @@ export const validateImageUri = (imageUri: string) => {
         `Unsupported image type: ${
           extension ?? "undefined"
         }. Supported types are: ${supportedMediaFiles
-          .filter((ext) => ["jpg", "jpeg", "png", "gif", "svg"].includes(ext))
+          // .filter((ext) => ["jpg", "jpeg", "png", "gif", "svg"].includes(ext))
+          .filter((ext) => ["png", "svg"].includes(ext))
           .join(", ")}`
       );
     }
