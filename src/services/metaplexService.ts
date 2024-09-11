@@ -194,6 +194,79 @@ export const createMetaplexCollectionNft = async (
   }
 };
 
+export const createMetaplexNft = async (
+  name: string,
+  symbol: string,
+  description: string,
+  imageUri: string,
+  animation_url: string,
+  external_url: string,
+  creator_url: string,
+  attributesList: any[],
+  plugins: any[],
+  creator: PublicKey,
+  network: "devnet" | "mainnet"
+) => {
+  try {
+    const extension = validateImageUri(imageUri);
+    const mimeType = getMimeType(extension);
+    console.log(
+      `Image validated. Extension: ${extension}, MIME type: ${mimeType}`
+    );
+
+    const umi = createUmiUploader(network);
+    const umiCreatorPublicKey = fromWeb3JsPublicKey(creator);
+    const assetSigner = createNoopSigner(umiCreatorPublicKey);
+
+    umi.use(signerIdentity(assetSigner));
+    const umiSigner = generateSigner(umi);
+    const uri = await uploadJsonUmi(
+      {
+        name: name,
+        symbol: symbol,
+        description: description,
+        image: imageUri,
+        animation_url: animation_url,
+        external_url: external_url,
+        creator_url: creator_url,
+        attributes: attributesList,
+        properties: {
+          files: [
+            {
+              uri: `${imageUri}`,
+              type: mimeType,
+            },
+          ],
+          category: "image",
+          creators: [
+            {
+              address: creator.toBase58(),
+              share: 100,
+            },
+          ],
+        },
+      },
+      network
+    );
+    const txBuilder = await create(umi, {
+      asset: umiSigner,
+      name: name,
+      uri,
+      plugins: [
+        ...plugins,
+        {
+          type: "Attributes",
+          attributeList: attributesList,
+        },
+      ],
+    }).buildAndSign(umi);
+    return umi.transactions.serialize(txBuilder);
+  } catch (error) {
+    console.error("Error creating metaplex nft", error);
+    throw error;
+  }
+};
+
 export const createMetaplexNftInCollection = async (
   name: string,
   symbol: string,
@@ -295,79 +368,6 @@ export const createMetaplexNftInCollection = async (
     }).compileToV0Message();
 
     return new VersionedTransaction(msg);
-  } catch (error) {
-    console.error("Error creating metaplex nft", error);
-    throw error;
-  }
-};
-
-export const createMetaplexNft = async (
-  name: string,
-  symbol: string,
-  description: string,
-  imageUri: string,
-  animation_url: string,
-  external_url: string,
-  creator_url: string,
-  attributesList: any[],
-  plugins: any[],
-  creator: PublicKey,
-  network: "devnet" | "mainnet"
-) => {
-  try {
-    const extension = validateImageUri(imageUri);
-    const mimeType = getMimeType(extension);
-    console.log(
-      `Image validated. Extension: ${extension}, MIME type: ${mimeType}`
-    );
-
-    const umi = createUmiUploader(network);
-    const umiCreatorPublicKey = fromWeb3JsPublicKey(creator);
-    const assetSigner = createNoopSigner(umiCreatorPublicKey);
-
-    umi.use(signerIdentity(assetSigner));
-    const umiSigner = generateSigner(umi);
-    const uri = await uploadJsonUmi(
-      {
-        name: name,
-        symbol: symbol,
-        description: description,
-        image: imageUri,
-        animation_url: animation_url,
-        external_url: external_url,
-        creator_url: creator_url,
-        attributes: attributesList,
-        properties: {
-          files: [
-            {
-              uri: `${imageUri}`,
-              type: mimeType,
-            },
-          ],
-          category: "image",
-          creators: [
-            {
-              address: creator.toBase58(),
-              share: 100,
-            },
-          ],
-        },
-      },
-      network
-    );
-    const txBuilder = await create(umi, {
-      asset: umiSigner,
-      name: name,
-      uri,
-      plugins: [
-        ...plugins,
-        {
-          type: "Attributes",
-          attributeList: attributesList,
-        },
-      ],
-    }).buildAndSign(umi);
-    return umi.transactions.serialize(txBuilder);
   } catch (error) {
     console.error("Error creating metaplex nft", error);
     throw error;
