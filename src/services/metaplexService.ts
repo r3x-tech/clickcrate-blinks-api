@@ -133,11 +133,11 @@ export const createMetaplexCollectionNft = async (
     let txBuilder;
     try {
       txBuilder = createCollection(umi, {
-        collection: collectionSigner,
+        collection: payerSigner,
         name,
         uri,
         // updateAuthority: umiCreatorPublicKey,
-        payer: payerSigner,
+        // payer: payerSigner,
         plugins: [
           ...plugins,
           {
