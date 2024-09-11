@@ -1,36 +1,32 @@
 // src/services/solanaService.ts
 import {
-  Cluster,
-  clusterApiUrl,
   Connection,
   Keypair,
   PublicKey,
   SystemProgram,
-  LAMPORTS_PER_SOL,
   TransactionInstruction,
   VersionedTransaction,
   TransactionMessage,
   ComputeBudgetProgram,
   Transaction,
-  ParsedTransactionWithMeta,
-  TransactionConfirmationStrategy,
-  sendAndConfirmTransaction,
 } from "@solana/web3.js";
 import { ProductInfo } from "../models/schemas";
-import { v4 as uuidv4 } from "uuid";
 import * as MetaplexService from "../services/metaplexService";
 import bs58 from "bs58";
 
 require("dotenv").config();
 
-const rpcUrl =
-  process.env.SOLANA_MAINNET_RPC_URL || "https://api.mainnet.solana.com";
-if (typeof rpcUrl !== "string" || rpcUrl == undefined || !rpcUrl) {
-  throw new TypeError("rpcUrl expected string");
-}
-const connection = new Connection(rpcUrl, {
-  commitment: "confirmed",
-});
+const createConnection = (network: "devnet" | "mainnet") => {
+  const rpcUrl =
+    network === "devnet"
+      ? process.env.SOLANA_DEVNET_RPC_URL
+      : process.env.SOLANA_MAINNET_RPC_URL;
+
+  if (typeof rpcUrl !== "string" || rpcUrl == undefined || !rpcUrl) {
+    throw new TypeError("rpcUrl expected string");
+  }
+  return new Connection(rpcUrl, "confirmed");
+};
 
 if (!process.env.PROXY_WALLET_SK || process.env.PROXY_WALLET_SK == undefined) {
   throw new TypeError("Proxy wallet secret key not found");
@@ -59,7 +55,11 @@ async function getTransactionDetails(txSignature: string): Promise<any> {
   return result;
 }
 
-async function getRecentBlockhashWithRetry(maxRetries = 3, delayMs = 1000) {
+async function getRecentBlockhashWithRetry(
+  connection: Connection,
+  maxRetries = 3,
+  delayMs = 1000
+) {
   for (let i = 0; i < maxRetries; i++) {
     try {
       const { blockhash, lastValidBlockHeight } =
@@ -76,11 +76,10 @@ async function getRecentBlockhashWithRetry(maxRetries = 3, delayMs = 1000) {
 
 const relayPaymentTransaction = async (
   amount: number,
-  fromPubkey: PublicKey
+  fromPubkey: PublicKey,
+  network: "devnet" | "mainnet"
 ) => {
-  const mainnetConnection = new Connection(
-    process.env.MAINNET_RPC || "https://api.mainnet-beta.solana.com"
-  );
+  const connection = createConnection(network);
   const toPubkey = relayWalletKeypair.publicKey;
 
   const transaction = new Transaction().add(
@@ -91,7 +90,7 @@ const relayPaymentTransaction = async (
     })
   );
 
-  const latestBlockhash = await mainnetConnection.getLatestBlockhash();
+  const latestBlockhash = await connection.getLatestBlockhash();
   transaction.recentBlockhash = latestBlockhash.blockhash;
   transaction.feePayer = fromPubkey;
 
@@ -101,8 +100,10 @@ const relayPaymentTransaction = async (
 const createTransaction = async (
   instruction: TransactionInstruction,
   feePayer: PublicKey,
+  network: "devnet" | "mainnet",
   computeUnits?: number
 ) => {
+  const connection = createConnection(network);
   const instructions: TransactionInstruction[] = [];
 
   const priorityFeeIx = ComputeBudgetProgram.setComputeUnitPrice({
@@ -134,8 +135,10 @@ const createTransaction = async (
 
 async function signAndSendTransaction(
   versionedTransaction: VersionedTransaction,
-  signers: Keypair[]
+  signers: Keypair[],
+  network: "devnet" | "mainnet"
 ): Promise<string> {
+  const connection = createConnection(network);
   try {
     if (signers.length !== 1 || !signers) {
       throw new Error(`Signers unavailable`);
@@ -167,7 +170,11 @@ async function signAndSendTransaction(
   }
 }
 
-async function simulateAndGetCost(tx: VersionedTransaction): Promise<number> {
+async function simulateAndGetCost(
+  tx: VersionedTransaction,
+  network: "devnet" | "mainnet"
+): Promise<number> {
+  const connection = createConnection(network);
   const simulation = await connection.simulateTransaction(tx);
 
   if (simulation.value.err) {
@@ -213,13 +220,15 @@ async function createProducts(
     [],
     publicKey,
     relayWalletKeypair.publicKey,
-    "devnet"
+    network
   );
 
-  totalCost += await simulateAndGetCost(posCollectionNftTx);
-  const posTxSignature = await signAndSendTransaction(posCollectionNftTx, [
-    relayWalletKeypair,
-  ]);
+  totalCost += await simulateAndGetCost(posCollectionNftTx, network);
+  const posTxSignature = await signAndSendTransaction(
+    posCollectionNftTx,
+    [relayWalletKeypair],
+    network
+  );
 
   // Create Product Listing Collection NFT
   const listingCollectionNftTx =
@@ -247,10 +256,11 @@ async function createProducts(
       network
     );
 
-  totalCost += await simulateAndGetCost(listingCollectionNftTx);
+  totalCost += await simulateAndGetCost(listingCollectionNftTx, network);
   const listingTxSignature = await signAndSendTransaction(
     listingCollectionNftTx,
-    [relayWalletKeypair]
+    [relayWalletKeypair],
+    network
   );
 
   // Get the listing collection NFT address
@@ -294,10 +304,12 @@ async function createProducts(
       network
     );
 
-    totalCost += await simulateAndGetCost(productNftTx);
-    const productTxSignature = await signAndSendTransaction(productNftTx, [
-      relayWalletKeypair,
-    ]);
+    totalCost += await simulateAndGetCost(productNftTx, network);
+    const productTxSignature = await signAndSendTransaction(
+      productNftTx,
+      [relayWalletKeypair],
+      network
+    );
     productNfts.push(productTxSignature);
   }
 
@@ -311,7 +323,7 @@ async function createProducts(
 }
 
 export {
-  connection,
+  createConnection,
   getRecentBlockhashWithRetry,
   createTransaction,
   signAndSendTransaction,

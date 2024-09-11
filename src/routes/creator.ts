@@ -157,7 +157,11 @@ router.post("/create-product", async (req, res) => {
       listingCollectionNftAddress,
     } = await createProducts(productInfo, publicKey, "devnet");
 
-    const relayTx = await relayPaymentTransaction(totalCost, publicKey);
+    const relayTx = await relayPaymentTransaction(
+      totalCost,
+      publicKey,
+      "mainnet"
+    );
 
     await axios.post(`${CLICKCRATE_API_URL}/initiate-verification`, { email });
 

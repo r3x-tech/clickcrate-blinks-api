@@ -28,7 +28,7 @@ import {
   fetchCollection,
   mplCore,
 } from "@metaplex-foundation/mpl-core";
-import { getRecentBlockhashWithRetry } from "./solanaService";
+import { createConnection, getRecentBlockhashWithRetry } from "./solanaService";
 
 const createUmiUploader = (network: "devnet" | "mainnet") => {
   const rpcUrl =
@@ -154,7 +154,8 @@ export const createMetaplexCollectionNft = async (
     }
     console.log("txBuilder is:", txBuilder);
 
-    const blockhash = await getRecentBlockhashWithRetry();
+    const currentConnection = createConnection("devnet");
+    const blockhash = await getRecentBlockhashWithRetry(currentConnection);
     if (blockhash == undefined) {
       console.error("Recent blockhash is undefined");
       throw Error("Failed to retrieve blockhash");
@@ -265,7 +266,8 @@ export const createMetaplexNftInCollection = async (
     }
     console.log("txBuilder is:", txBuilder);
 
-    const blockhash = await getRecentBlockhashWithRetry();
+    const currentConnection = createConnection("devnet");
+    const blockhash = await getRecentBlockhashWithRetry(currentConnection);
     if (blockhash == undefined) {
       console.error("Recent blockhash is undefined");
       throw Error("Failed to retrieve blockhash");
@@ -273,6 +275,8 @@ export const createMetaplexNftInCollection = async (
     console.log("Blockhash retrieved:", blockhash);
 
     const ixs = txBuilder.getInstructions();
+    console.log("ixs retrieved:", ixs);
+
     const msg = new TransactionMessage({
       payerKey: feePayer,
       recentBlockhash: blockhash.blockhash as string,
