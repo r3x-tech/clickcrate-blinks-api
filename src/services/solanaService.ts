@@ -151,7 +151,7 @@ async function signAndSendTransaction(
 
     const serializedTransaction = versionedTransaction.serialize();
     const txId = await connection.sendRawTransaction(serializedTransaction, {
-      skipPreflight: false,
+      skipPreflight: true,
     });
     console.log(`Transaction sent with ID: ${txId}`);
 
