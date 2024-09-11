@@ -13,6 +13,13 @@ import {
 import { ProductInfo } from "../models/schemas";
 import * as MetaplexService from "../services/metaplexService";
 import bs58 from "bs58";
+import { mplCore } from "@metaplex-foundation/mpl-core";
+import { irysUploader } from "@metaplex-foundation/umi-uploader-irys";
+import { createUmi } from "@metaplex-foundation/umi-bundle-defaults";
+import {
+  createSignerFromKeypair,
+  signTransaction,
+} from "@metaplex-foundation/umi";
 
 require("dotenv").config();
 
@@ -232,11 +239,45 @@ async function createProducts(
   console.log("POS created!!!!!!!");
   // totalCost += await simulateAndGetCost(posCollectionNftTx, network);
   // console.log("Cost calculated");
-  const posTxSignature = await MetaplexService.signAndSendLegacyTransaction(
-    posCollectionNftTx,
-    [relayWalletKeypair],
-    network
+  // const posTxSignature = await MetaplexService.signAndSendLegacyTransaction(
+  //   posCollectionNftTx,
+  //   [relayWalletKeypair],
+  //   network
+  // );
+
+  const rpcUrl =
+    network === "devnet"
+      ? process.env.SOLANA_DEVNET_RPC_URL
+      : process.env.SOLANA_MAINNET_RPC_URL;
+  const solConnection = new Connection(rpcUrl!, "confirmed");
+  const umi = createUmi(solConnection).use(mplCore()).use(irysUploader());
+  const metaRelayWalletKp = umi.eddsa.createKeypairFromSecretKey(
+    bs58.decode(process.env.PROXY_WALLET_SK!)
   );
+  const mySignedTransaction = await signTransaction(posCollectionNftTx, [
+    createSignerFromKeypair(umi, metaRelayWalletKp),
+  ]);
+
+  const serializedTransaction = umi.transactions.serialize(mySignedTransaction);
+  console.log(
+    `Encoded transaction is: `,
+    Buffer.from(serializedTransaction).toString("base64")
+  );
+  const txId = await umi.rpc.sendTransaction(mySignedTransaction, {
+    skipPreflight: true,
+  });
+  console.log(
+    `Transaction sent with ID: ${Buffer.from(txId).toString("base64")}`
+  );
+
+  const rtB = await umi.rpc.getLatestBlockhash();
+  const confirmResult = await umi.rpc.confirmTransaction(txId, {
+    strategy: { type: "blockhash", ...rtB },
+  });
+  console.log(`Confirmed tx: `, confirmResult);
+
+  const posTxSignature = Buffer.from(txId).toString("base64");
+  console.log(`POS transaction sig: `, posTxSignature);
 
   // Create Product Listing Collection NFT
   const listingCollectionNftTx =
@@ -329,7 +370,7 @@ async function createProducts(
 
   return {
     totalCost,
-    posTxSignature,
+    mySignedTransaction,
     listingTxSignature,
     productNfts,
     listingCollectionNftAddress,

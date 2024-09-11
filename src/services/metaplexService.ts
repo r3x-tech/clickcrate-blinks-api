@@ -96,9 +96,9 @@ export const createMetaplexCollectionNft = async (
     const umiFeePayerPublicKey = fromWeb3JsPublicKey(feePayer);
     const creatorSigner = createNoopSigner(umiCreatorPublicKey);
     const payerSigner = createNoopSigner(umiFeePayerPublicKey);
-
     umi.use(signerIdentity(payerSigner));
     console.log("Signer set up");
+
     const collectionSigner = generateSigner(umi);
     // umi.use(signerIdentity(collectionSigner));
 
@@ -439,7 +439,12 @@ export async function signAndSendLegacyTransaction(
       throw new Error(`Signers unavailable`);
     }
     // const connection = createConnection(network);
-    const umi = createUmiUploader(network);
+    const rpcUrl =
+      network === "devnet"
+        ? process.env.SOLANA_DEVNET_RPC_URL
+        : process.env.SOLANA_MAINNET_RPC_URL;
+    const solanaConnection = new Connection(rpcUrl!, "confirmed");
+    const umi = createUmi(solanaConnection).use(mplCore()).use(irysUploader());
     const serializedTransaction = umi.transactions.serialize(legacyTx);
     console.log(
       `Encoded transaction is: `,

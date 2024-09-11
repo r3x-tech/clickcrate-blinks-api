@@ -151,7 +151,7 @@ router.post("/create-product", async (req, res) => {
 
     const {
       totalCost,
-      posTxSignature,
+      mySignedTransaction,
       listingTxSignature,
       productNfts,
       listingCollectionNftAddress,
@@ -181,7 +181,7 @@ router.post("/create-product", async (req, res) => {
             links: {
               actions: [
                 {
-                  href: `/creator/verify-and-place?pos=${posTxSignature}&listing=${listingTxSignature}&products=${productNfts.join(
+                  href: `/creator/verify-and-place?pos=${mySignedTransaction}&listing=${listingTxSignature}&products=${productNfts.join(
                     ","
                   )}&price=${unitPrice}&account=${account}&listingNft=${listingCollectionNftAddress}`,
                   label: "Verify and Place Product",
