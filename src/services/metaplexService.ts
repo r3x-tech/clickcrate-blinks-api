@@ -99,7 +99,7 @@ export const createMetaplexCollectionNft = async (
 
     umi.use(signerIdentity(payerSigner));
     console.log("Signer set up");
-    // const collectionSigner = generateSigner(umi);
+    const collectionSigner = generateSigner(umi);
     // umi.use(signerIdentity(collectionSigner));
 
     const uri = await uploadJsonUmi(
@@ -131,37 +131,54 @@ export const createMetaplexCollectionNft = async (
     );
     console.log("JSON uploaded, URI:", uri);
 
-    console.log("Creating collection");
-    let txBuilder;
-    try {
-      txBuilder = await createCollection(umi, {
-        collection: payerSigner,
-        name,
-        uri,
-        // updateAuthority: umiCreatorPublicKey,
-        // payer: payerSigner,
-        plugins: [
-          ...plugins,
-          {
-            type: "Attributes",
-            attributeList: attributesList,
-          },
-        ],
-      })
-        .prepend(setComputeUnitPrice(umi, { microLamports: 1000 }))
-        .buildAndSign(umi);
-      // });
-      console.log("Collection created");
-    } catch (error) {
-      console.error("Error creating collection:", error);
-      throw error;
-    }
+    // console.log("Creating collection");
+    // let txBuilder;
+    // try {
+    //   txBuilder = await createCollection(umi, {
+    //     collection: collectionSigner,
+    //     name,
+    //     uri,
+    //     // updateAuthority: umiCreatorPublicKey,
+    //     // payer: payerSigner,
+    //     plugins: [
+    //       ...plugins,
+    //       {
+    //         type: "Attributes",
+    //         attributeList: attributesList,
+    //       },
+    //     ],
+    //   })
+    //     // .prepend(setComputeUnitPrice(umi, { microLamports: 1000 }))
+    //     .buildAndSign(umi);
+    //   // });
+    //   console.log("Collection created");
+    // } catch (error) {
+    //   console.error("Error creating collection:", error);
+    //   throw error;
+    // }
 
-    if (!txBuilder) {
-      console.error("txBuilder is undefined");
-      throw Error("Failed to retrieve builder");
-    }
-    console.log("txBuilder is:", txBuilder);
+    const txBuilder = await createCollection(umi, {
+      collection: collectionSigner,
+      name,
+      uri,
+      // updateAuthority: umiCreatorPublicKey,
+      // payer: payerSigner,
+      plugins: [
+        ...plugins,
+        {
+          type: "Attributes",
+          attributeList: attributesList,
+        },
+      ],
+    })
+      // .prepend(setComputeUnitPrice(umi, { microLamports: 1000 }))
+      .buildAndSign(umi);
+
+    // if (!txBuilder) {
+    //   console.error("txBuilder is undefined");
+    //   throw Error("Failed to retrieve builder");
+    // }
+    // console.log("txBuilder is:", txBuilder);
 
     // const currentConnection = createConnection("devnet");
     // const blockhash = await getRecentBlockhashWithRetry(currentConnection);
