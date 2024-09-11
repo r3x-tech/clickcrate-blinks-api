@@ -93,11 +93,12 @@ export const createMetaplexCollectionNft = async (
     console.log("Umi created");
     const umiCreatorPublicKey = fromWeb3JsPublicKey(creator);
     const umiFeePayerPublicKey = fromWeb3JsPublicKey(feePayer);
-    const collectionSigner = createNoopSigner(umiCreatorPublicKey);
+    const creatorSigner = createNoopSigner(umiCreatorPublicKey);
     const payerSigner = createNoopSigner(umiFeePayerPublicKey);
 
     umi.use(signerIdentity(payerSigner));
     console.log("Signer set up");
+    const collectionSigner = generateSigner(umi);
 
     const uri = await uploadJsonUmi(
       {
@@ -132,7 +133,7 @@ export const createMetaplexCollectionNft = async (
     let txBuilder;
     try {
       txBuilder = createCollection(umi, {
-        collection: payerSigner,
+        collection: collectionSigner,
         name,
         uri,
         // updateAuthority: umiCreatorPublicKey,
