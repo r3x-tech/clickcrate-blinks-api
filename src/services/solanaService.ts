@@ -59,6 +59,21 @@ async function getTransactionDetails(txSignature: string): Promise<any> {
   return result;
 }
 
+async function getRecentBlockhashWithRetry(maxRetries = 3, delayMs = 1000) {
+  for (let i = 0; i < maxRetries; i++) {
+    try {
+      const { blockhash, lastValidBlockHeight } =
+        await connection.getLatestBlockhash("finalized");
+      return { blockhash, lastValidBlockHeight };
+    } catch (error) {
+      if (i === maxRetries - 1) throw error;
+      await new Promise((resolve) => setTimeout(resolve, delayMs));
+    }
+  }
+  console.error("Failed to get recent blockhash after retries");
+  return undefined;
+}
+
 const relayPaymentTransaction = async (
   amount: number,
   fromPubkey: PublicKey
@@ -297,6 +312,7 @@ async function createProducts(
 
 export {
   connection,
+  getRecentBlockhashWithRetry,
   createTransaction,
   signAndSendTransaction,
   createProducts,

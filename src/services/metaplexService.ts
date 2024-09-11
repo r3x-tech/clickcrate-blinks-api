@@ -28,6 +28,7 @@ import {
   fetchCollection,
   mplCore,
 } from "@metaplex-foundation/mpl-core";
+import { getRecentBlockhashWithRetry } from "./solanaService";
 
 const createUmiUploader = (network: "devnet" | "mainnet") => {
   const rpcUrl =
@@ -151,20 +152,27 @@ export const createMetaplexCollectionNft = async (
       console.error("txBuilder is undefined");
       throw Error("Failed to retrieve builder");
     }
-    console.log("txBuilder is:", JSON.stringify(txBuilder));
+    console.log("txBuilder is:", txBuilder);
 
-    if (txBuilder.getBlockhash() == undefined) {
-      console.error("txBuilder blockhash is undefined");
+    const blockhash = await getRecentBlockhashWithRetry();
+    if (blockhash == undefined) {
+      console.error("Recent blockhash is undefined");
       throw Error("Failed to retrieve blockhash");
     }
     console.log("Blockhash retrieved:", txBuilder.getBlockhash());
+
+    // if (txBuilder.getBlockhash() == undefined) {
+    //   console.error("txBuilder blockhash is undefined");
+    //   throw Error("Failed to retrieve blockhash");
+    // }
+    // console.log("Blockhash retrieved:", txBuilder.getBlockhash());
 
     const ixs = txBuilder.getInstructions();
     console.log("Instructions retrieved:", ixs.length);
 
     const msg = new TransactionMessage({
       payerKey: feePayer,
-      recentBlockhash: txBuilder.getBlockhash() as string,
+      recentBlockhash: blockhash.blockhash,
       instructions: [
         ...ixs.map(convertMetaplexInstructionToTransactionInstruction),
       ],
@@ -251,13 +259,23 @@ export const createMetaplexNftInCollection = async (
       // }).prepend(setComputeUnitPrice(umi, { microLamports: 1000 }));
     });
 
-    if (!txBuilder || txBuilder.getBlockhash() == undefined) {
+    if (!txBuilder) {
+      console.error("txBuilder is undefined");
       throw Error("Failed to retrieve builder");
     }
+    console.log("txBuilder is:", txBuilder);
+
+    const blockhash = await getRecentBlockhashWithRetry();
+    if (blockhash == undefined) {
+      console.error("Recent blockhash is undefined");
+      throw Error("Failed to retrieve blockhash");
+    }
+    console.log("Blockhash retrieved:", txBuilder.getBlockhash());
+
     const ixs = txBuilder.getInstructions();
     const msg = new TransactionMessage({
       payerKey: feePayer,
-      recentBlockhash: txBuilder.getBlockhash() as string,
+      recentBlockhash: blockhash.blockhash,
       instructions: [
         ...ixs.map(convertMetaplexInstructionToTransactionInstruction),
       ],
