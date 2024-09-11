@@ -92,8 +92,11 @@ export const createMetaplexCollectionNft = async (
     const umi = createUmiUploader(network);
     console.log("Umi created");
     const umiCreatorPublicKey = fromWeb3JsPublicKey(creator);
+    const umiFeePayerPublicKey = fromWeb3JsPublicKey(feePayer);
     const collectionSigner = createNoopSigner(umiCreatorPublicKey);
-    umi.use(signerIdentity(collectionSigner));
+    const payerSigner = createNoopSigner(umiFeePayerPublicKey);
+
+    umi.use(signerIdentity(payerSigner));
     console.log("Signer set up");
 
     const uri = await uploadJsonUmi(
@@ -133,6 +136,7 @@ export const createMetaplexCollectionNft = async (
         name,
         uri,
         updateAuthority: umiCreatorPublicKey,
+        payer: payerSigner,
         plugins: [
           ...plugins,
           {
@@ -140,8 +144,10 @@ export const createMetaplexCollectionNft = async (
             attributeList: attributesList,
           },
         ],
+        // })
+        //   .prepend(setComputeUnitPrice(umi, { microLamports: 1000 }))
+        //   .buildAndSign(umi);
       });
-      // }).prepend(setComputeUnitPrice(umi, { microLamports: 1000 })).buildAndSign(umi)
       console.log("Collection created");
     } catch (error) {
       console.error("Error creating collection:", error);
@@ -181,6 +187,7 @@ export const createMetaplexCollectionNft = async (
     console.log("Transaction message compiled");
 
     return new VersionedTransaction(msg);
+    // return (await txBuilder).serializedMessage
   } catch (error) {
     console.error("Error creating metaplex collection", error);
     throw error;
@@ -211,10 +218,12 @@ export const createMetaplexNftInCollection = async (
 
     const umi = createUmiUploader(network);
     const umiCreatorPublicKey = fromWeb3JsPublicKey(creator);
+    const umiFeePayerPublicKey = fromWeb3JsPublicKey(feePayer);
     const umiCollectionAddress = fromWeb3JsPublicKey(collectionAddress);
     const assetSigner = createNoopSigner(umiCreatorPublicKey);
+    const payerSigner = createNoopSigner(umiFeePayerPublicKey);
     const collection = await fetchCollection(umi, umiCollectionAddress);
-    umi.use(signerIdentity(assetSigner));
+    umi.use(signerIdentity(payerSigner));
 
     const uri = await uploadJsonUmi(
       {
