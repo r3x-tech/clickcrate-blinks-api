@@ -286,7 +286,6 @@ async function createProducts(
       network
     );
 
-  console.log("Listing created!!!!!!!");
   // totalCost += await simulateAndGetCost(listingCollectionNftTx, network);
   // console.log("Cost updated");
 
@@ -297,14 +296,25 @@ async function createProducts(
       [productSigner],
       network
     );
+  console.log("Listing created!!!!!!!");
+
+  const listingTxSignatureUint8Array = Uint8Array.from(
+    Buffer.from(listingTxSignature, "base64")
+  );
+  const refetchedTX = await umi.rpc.getTransaction(
+    listingTxSignatureUint8Array
+  );
+  console.log(`refetchedTX: `, refetchedTX);
 
   // Get the listing collection NFT address
   const listingTxDetails = await getTransactionDetails(listingTxSignature);
   let listingCollectionNftAddress: string | undefined;
+  console.log(`fetched listingTxDetails: `, listingTxDetails);
 
   for (const action of listingTxDetails.result.actions) {
     if (action.type === "NFT_MINT") {
       listingCollectionNftAddress = action.info.nft_address;
+      console.log("Found mint!!!!!!!");
       break;
     }
   }
