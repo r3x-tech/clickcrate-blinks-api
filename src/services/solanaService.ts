@@ -150,13 +150,20 @@ async function signAndSendTransaction(
     );
 
     const serializedTransaction = versionedTransaction.serialize();
-
     const txId = await connection.sendRawTransaction(serializedTransaction, {
       skipPreflight: false,
     });
     console.log(`Transaction sent with ID: ${txId}`);
 
     const confirmation = await connection.confirmTransaction(txId, "confirmed");
+
+    // const latestBlockHash = await connection.getLatestBlockhash();
+
+    // const confirmation = await connection.confirmTransaction({
+    //   blockhash: latestBlockHash.blockhash,
+    //   lastValidBlockHeight: latestBlockHash.lastValidBlockHeight,
+    //   signature: txId,
+    // });
     console.log(`Transaction confirmed: `, confirmation);
 
     return txId;
@@ -223,6 +230,7 @@ async function createProducts(
     network
   );
 
+  console.log("POS created!!!!!!!");
   // totalCost += await simulateAndGetCost(posCollectionNftTx, network);
   // console.log("Cost calculated");
   const posTxSignature = await signAndSendTransaction(
@@ -257,6 +265,7 @@ async function createProducts(
       network
     );
 
+  console.log("Listing created!!!!!!!");
   // totalCost += await simulateAndGetCost(listingCollectionNftTx, network);
   // console.log("Cost updated");
   const listingTxSignature = await signAndSendTransaction(
