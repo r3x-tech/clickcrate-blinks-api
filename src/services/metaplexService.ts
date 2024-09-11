@@ -96,9 +96,10 @@ export const createMetaplexCollectionNft = async (
     const creatorSigner = createNoopSigner(umiCreatorPublicKey);
     const payerSigner = createNoopSigner(umiFeePayerPublicKey);
 
-    umi.use(signerIdentity(payerSigner));
+    // umi.use(signerIdentity(payerSigner));
     console.log("Signer set up");
     const collectionSigner = generateSigner(umi);
+    umi.use(signerIdentity(collectionSigner));
 
     const uri = await uploadJsonUmi(
       {
