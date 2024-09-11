@@ -223,7 +223,8 @@ async function createProducts(
     network
   );
 
-  totalCost += await simulateAndGetCost(posCollectionNftTx, network);
+  // totalCost += await simulateAndGetCost(posCollectionNftTx, network);
+  // console.log("Cost calculated");
   const posTxSignature = await signAndSendTransaction(
     posCollectionNftTx,
     [relayWalletKeypair],
@@ -256,7 +257,8 @@ async function createProducts(
       network
     );
 
-  totalCost += await simulateAndGetCost(listingCollectionNftTx, network);
+  // totalCost += await simulateAndGetCost(listingCollectionNftTx, network);
+  // console.log("Cost updated");
   const listingTxSignature = await signAndSendTransaction(
     listingCollectionNftTx,
     [relayWalletKeypair],
@@ -304,7 +306,7 @@ async function createProducts(
       network
     );
 
-    totalCost += await simulateAndGetCost(productNftTx, network);
+    // totalCost += await simulateAndGetCost(productNftTx, network);
     const productTxSignature = await signAndSendTransaction(
       productNftTx,
       [relayWalletKeypair],
@@ -312,6 +314,9 @@ async function createProducts(
     );
     productNfts.push(productTxSignature);
   }
+
+  totalCost = (2 + productNfts.length) * 0.01;
+  console.log("Cost finalized: ", totalCost);
 
   return {
     totalCost,
