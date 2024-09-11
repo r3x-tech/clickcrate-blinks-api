@@ -154,16 +154,15 @@ async function signAndSendTransaction(
       skipPreflight: true,
     });
     console.log(`Transaction sent with ID: ${txId}`);
+    // const confirmation = await connection.confirmTransaction(txId, "confirmed");
 
-    const confirmation = await connection.confirmTransaction(txId, "confirmed");
+    const latestBlockHash = await connection.getLatestBlockhash();
 
-    // const latestBlockHash = await connection.getLatestBlockhash();
-
-    // const confirmation = await connection.confirmTransaction({
-    //   blockhash: latestBlockHash.blockhash,
-    //   lastValidBlockHeight: latestBlockHash.lastValidBlockHeight,
-    //   signature: txId,
-    // });
+    const confirmation = await connection.confirmTransaction({
+      blockhash: latestBlockHash.blockhash,
+      lastValidBlockHeight: latestBlockHash.lastValidBlockHeight,
+      signature: txId,
+    });
     console.log(`Transaction confirmed: `, confirmation);
 
     return txId;
