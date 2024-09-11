@@ -329,6 +329,7 @@ async function createProducts(
 
 export {
   createConnection,
+  simulateAndGetCost,
   getRecentBlockhashWithRetry,
   createTransaction,
   signAndSendTransaction,
