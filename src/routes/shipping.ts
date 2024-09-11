@@ -103,8 +103,8 @@ router.post("/create-shipping-info-nft", async (req, res) => {
       shippingPhone,
       shippingAddress,
       shippingCity,
-      shippingCountryRegion,
       shippingStateProvince,
+      shippingCountryRegion,
       shippingZipCode,
     } = shippingInfo;
     if (
@@ -113,8 +113,8 @@ router.post("/create-shipping-info-nft", async (req, res) => {
       validateShippingPhone(shippingPhone!) &&
       validateShippingAddress(shippingAddress) &&
       validateShippingCity(shippingCity) &&
-      validateShippingCountryRegion(shippingCountryRegion) &&
       validateShippingStateProvince(shippingStateProvince) &&
+      validateShippingCountryRegion(shippingCountryRegion) &&
       validateShippingZipCode(shippingZipCode)
     ) {
       const encryptedShippingInfo = encryptShippingInfo(

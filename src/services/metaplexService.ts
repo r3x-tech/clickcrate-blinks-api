@@ -141,7 +141,7 @@ export const createMetaplexCollectionNft = async (
           },
         ],
       });
-      // }).prepend(setComputeUnitPrice(umi, { microLamports: 1000 }));
+      // }).prepend(setComputeUnitPrice(umi, { microLamports: 1000 })).buildAndSign(umi)
       console.log("Collection created");
     } catch (error) {
       console.error("Error creating collection:", error);
@@ -159,7 +159,7 @@ export const createMetaplexCollectionNft = async (
       console.error("Recent blockhash is undefined");
       throw Error("Failed to retrieve blockhash");
     }
-    console.log("Blockhash retrieved:", txBuilder.getBlockhash());
+    console.log("Blockhash retrieved:", blockhash);
 
     // if (txBuilder.getBlockhash() == undefined) {
     //   console.error("txBuilder blockhash is undefined");
@@ -172,7 +172,7 @@ export const createMetaplexCollectionNft = async (
 
     const msg = new TransactionMessage({
       payerKey: feePayer,
-      recentBlockhash: blockhash.blockhash,
+      recentBlockhash: blockhash.blockhash as string,
       instructions: [
         ...ixs.map(convertMetaplexInstructionToTransactionInstruction),
       ],
@@ -256,7 +256,7 @@ export const createMetaplexNftInCollection = async (
           attributeList: attributesList,
         },
       ],
-      // }).prepend(setComputeUnitPrice(umi, { microLamports: 1000 }));
+      // }).prepend(setComputeUnitPrice(umi, { microLamports: 1000 })).buildAndSign(umi)
     });
 
     if (!txBuilder) {
@@ -270,12 +270,12 @@ export const createMetaplexNftInCollection = async (
       console.error("Recent blockhash is undefined");
       throw Error("Failed to retrieve blockhash");
     }
-    console.log("Blockhash retrieved:", txBuilder.getBlockhash());
+    console.log("Blockhash retrieved:", blockhash);
 
     const ixs = txBuilder.getInstructions();
     const msg = new TransactionMessage({
       payerKey: feePayer,
-      recentBlockhash: blockhash.blockhash,
+      recentBlockhash: blockhash.blockhash as string,
       instructions: [
         ...ixs.map(convertMetaplexInstructionToTransactionInstruction),
       ],
