@@ -214,6 +214,17 @@ async function createProducts(
   const { name, imageUri, description, quantity, account } = productInfo;
   let totalCost = 0;
 
+  const rpcUrl =
+    network === "devnet"
+      ? process.env.SOLANA_DEVNET_RPC_URL
+      : process.env.SOLANA_MAINNET_RPC_URL;
+  const solConnection = new Connection(rpcUrl!, "confirmed");
+  const umi = createUmi(solConnection).use(mplCore()).use(irysUploader());
+  const metaRelayWalletKp = umi.eddsa.createKeypairFromSecretKey(
+    bs58.decode(process.env.PROXY_WALLET_SK!)
+  );
+  const productSigner = createSignerFromKeypair(umi, metaRelayWalletKp);
+
   // Create ClickCrate POS Collection NFT
   const posCollectionNftTx = await MetaplexService.createMetaplexCollectionNft(
     `${name} ClickCrate POS`,
@@ -239,44 +250,14 @@ async function createProducts(
   console.log("POS created!!!!!!!");
   // totalCost += await simulateAndGetCost(posCollectionNftTx, network);
   // console.log("Cost calculated");
-  // const posTxSignature = await MetaplexService.signAndSendLegacyTransaction(
-  //   posCollectionNftTx,
-  //   [relayWalletKeypair],
-  //   network
-  // );
 
-  const rpcUrl =
-    network === "devnet"
-      ? process.env.SOLANA_DEVNET_RPC_URL
-      : process.env.SOLANA_MAINNET_RPC_URL;
-  const solConnection = new Connection(rpcUrl!, "confirmed");
-  const umi = createUmi(solConnection).use(mplCore()).use(irysUploader());
-  const metaRelayWalletKp = umi.eddsa.createKeypairFromSecretKey(
-    bs58.decode(process.env.PROXY_WALLET_SK!)
-  );
-  const mySignedTransaction = await signTransaction(posCollectionNftTx, [
-    createSignerFromKeypair(umi, metaRelayWalletKp),
-  ]);
-
-  const serializedTransaction = umi.transactions.serialize(mySignedTransaction);
-  console.log(
-    `Encoded transaction is: `,
-    Buffer.from(serializedTransaction).toString("base64")
-  );
-  const txId = await umi.rpc.sendTransaction(mySignedTransaction, {
-    skipPreflight: true,
-  });
-  console.log(
-    `Transaction sent with ID: ${Buffer.from(txId).toString("base64")}`
+  const posTxSignature = await MetaplexService.signAndSendMetaplexTransaction(
+    umi,
+    posCollectionNftTx,
+    [productSigner],
+    network
   );
 
-  const rtB = await umi.rpc.getLatestBlockhash();
-  const confirmResult = await umi.rpc.confirmTransaction(txId, {
-    strategy: { type: "blockhash", ...rtB },
-  });
-  console.log(`Confirmed tx: `, confirmResult);
-
-  const posTxSignature = Buffer.from(txId).toString("base64");
   console.log(`POS transaction sig: `, posTxSignature);
 
   // Create Product Listing Collection NFT
@@ -308,11 +289,14 @@ async function createProducts(
   console.log("Listing created!!!!!!!");
   // totalCost += await simulateAndGetCost(listingCollectionNftTx, network);
   // console.log("Cost updated");
-  const listingTxSignature = await MetaplexService.signAndSendLegacyTransaction(
-    listingCollectionNftTx,
-    [relayWalletKeypair],
-    network
-  );
+
+  const listingTxSignature =
+    await MetaplexService.signAndSendMetaplexTransaction(
+      umi,
+      listingCollectionNftTx,
+      [productSigner],
+      network
+    );
 
   // Get the listing collection NFT address
   const listingTxDetails = await getTransactionDetails(listingTxSignature);
@@ -357,9 +341,10 @@ async function createProducts(
 
     // totalCost += await simulateAndGetCost(productNftTx, network);
     const productTxSignature =
-      await MetaplexService.signAndSendLegacyTransaction(
+      await MetaplexService.signAndSendMetaplexTransaction(
+        umi,
         productNftTx,
-        [relayWalletKeypair],
+        [productSigner],
         network
       );
     productNfts.push(productTxSignature);
@@ -370,7 +355,7 @@ async function createProducts(
 
   return {
     totalCost,
-    mySignedTransaction,
+    posTxSignature,
     listingTxSignature,
     productNfts,
     listingCollectionNftAddress,

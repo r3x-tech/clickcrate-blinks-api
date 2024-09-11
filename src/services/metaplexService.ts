@@ -12,6 +12,10 @@ import {
   createSignerFromKeypair,
   generateSigner,
   Transaction,
+  signTransaction,
+  Signer,
+  Umi,
+  signerPayer,
 } from "@metaplex-foundation/umi";
 import { createUmi } from "@metaplex-foundation/umi-bundle-defaults";
 import { irysUploader } from "@metaplex-foundation/umi-uploader-irys";
@@ -100,7 +104,6 @@ export const createMetaplexCollectionNft = async (
     console.log("Signer set up");
 
     const collectionSigner = generateSigner(umi);
-    // umi.use(signerIdentity(collectionSigner));
 
     const uri = await uploadJsonUmi(
       {
@@ -130,39 +133,10 @@ export const createMetaplexCollectionNft = async (
       network
     );
     console.log("JSON uploaded, URI:", uri);
-
-    // console.log("Creating collection");
-    // let txBuilder;
-    // try {
-    //   txBuilder = await createCollection(umi, {
-    //     collection: collectionSigner,
-    //     name,
-    //     uri,
-    //     // updateAuthority: umiCreatorPublicKey,
-    //     // payer: payerSigner,
-    //     plugins: [
-    //       ...plugins,
-    //       {
-    //         type: "Attributes",
-    //         attributeList: attributesList,
-    //       },
-    //     ],
-    //   })
-    //     // .prepend(setComputeUnitPrice(umi, { microLamports: 1000 }))
-    //     .buildAndSign(umi);
-    //   // });
-    //   console.log("Collection created");
-    // } catch (error) {
-    //   console.error("Error creating collection:", error);
-    //   throw error;
-    // }
-
     const txBuilder = await createCollection(umi, {
       collection: collectionSigner,
       name,
       uri,
-      // updateAuthority: umiCreatorPublicKey,
-      // payer: payerSigner,
       plugins: [
         ...plugins,
         {
@@ -171,45 +145,107 @@ export const createMetaplexCollectionNft = async (
         },
       ],
     })
-      // .prepend(setComputeUnitPrice(umi, { microLamports: 1000 }))
+      .prepend(setComputeUnitPrice(umi, { microLamports: 1000 }))
       .buildAndSign(umi);
-
-    // if (!txBuilder) {
-    //   console.error("txBuilder is undefined");
-    //   throw Error("Failed to retrieve builder");
-    // }
-    // console.log("txBuilder is:", txBuilder);
-
-    // const currentConnection = createConnection("devnet");
-    // const blockhash = await getRecentBlockhashWithRetry(currentConnection);
-    // if (blockhash == undefined) {
-    //   console.error("Recent blockhash is undefined");
-    //   throw Error("Failed to retrieve blockhash");
-    // }
-    // console.log("Blockhash retrieved:", blockhash);
-
-    // // if (txBuilder.getBlockhash() == undefined) {
-    // //   console.error("txBuilder blockhash is undefined");
-    // //   throw Error("Failed to retrieve blockhash");
-    // // }
-    // // console.log("Blockhash retrieved:", txBuilder.getBlockhash());
-
-    // const ixs = txBuilder.getInstructions();
-    // console.log("Instructions retrieved:", ixs.length);
-
-    // const msg = new TransactionMessage({
-    //   payerKey: feePayer,
-    //   recentBlockhash: blockhash.blockhash as string,
-    //   instructions: [
-    //     ...ixs.map(convertMetaplexInstructionToTransactionInstruction),
-    //   ],
-    // }).compileToV0Message();
-    // console.log("Transaction message compiled");
-
-    // return new VersionedTransaction(msg);
+    if (!txBuilder) {
+      console.error("txBuilder is undefined");
+      throw Error("Failed to retrieve builder");
+    }
     return txBuilder;
   } catch (error) {
     console.error("Error creating metaplex collection", error);
+    throw error;
+  }
+};
+
+export const createMetaplexNftInCollection = async (
+  name: string,
+  symbol: string,
+  description: string,
+  imageUri: string,
+  animation_url: string,
+  external_url: string,
+  creator_url: string,
+  attributesList: Attribute[],
+  plugins: any[],
+  collectionAddress: PublicKey,
+  creator: PublicKey,
+  feePayer: PublicKey,
+  network: "devnet" | "mainnet"
+) => {
+  try {
+    const extension = validateImageUri(imageUri);
+    const mimeType = getMimeType(extension);
+    console.log(
+      `Image validated. Extension: ${extension}, MIME type: ${mimeType}`
+    );
+
+    const umi = createUmiUploader(network);
+    const umiCollectionAddress = fromWeb3JsPublicKey(collectionAddress);
+    const collection = await fetchCollection(umi, umiCollectionAddress);
+    const umiCreatorPublicKey = fromWeb3JsPublicKey(creator);
+    const umiFeePayerPublicKey = fromWeb3JsPublicKey(feePayer);
+    const creatorSigner = createNoopSigner(umiCreatorPublicKey);
+    const payerSigner = createNoopSigner(umiFeePayerPublicKey);
+    umi.use(signerIdentity(payerSigner));
+    // umi.use(signerPayer(payerSigner));
+    console.log("Signer set up");
+
+    const assetSigner = generateSigner(umi);
+
+    const uri = await uploadJsonUmi(
+      {
+        name: name,
+        symbol: symbol,
+        description: description,
+        image: imageUri,
+        animation_url: animation_url,
+        external_url: external_url,
+        creator_url: creator_url,
+        attributes: attributesList,
+        properties: {
+          files: [
+            {
+              uri: `${imageUri}`,
+              type: mimeType,
+            },
+          ],
+          category: "image",
+          creators: [
+            {
+              address: creator.toBase58(),
+              share: 100,
+            },
+          ],
+        },
+      },
+      network
+    );
+
+    const txBuilder = await create(umi, {
+      asset: assetSigner,
+      collection,
+      name: name,
+      uri,
+      plugins: [
+        ...plugins,
+        {
+          type: "Attributes",
+          attributeList: attributesList,
+        },
+      ],
+    })
+      .prepend(setComputeUnitPrice(umi, { microLamports: 1000 }))
+      .buildAndSign(umi);
+
+    if (!txBuilder) {
+      console.error("txBuilder is undefined");
+      throw Error("Failed to retrieve builder");
+    }
+    console.log("txBuilder is:", txBuilder);
+    return txBuilder;
+  } catch (error) {
+    console.error("Error creating metaplex nft", error);
     throw error;
   }
 };
@@ -280,117 +316,11 @@ export const createMetaplexNft = async (
         },
       ],
     }).buildAndSign(umi);
-    return umi.transactions.serialize(txBuilder);
-  } catch (error) {
-    console.error("Error creating metaplex nft", error);
-    throw error;
-  }
-};
-
-export const createMetaplexNftInCollection = async (
-  name: string,
-  symbol: string,
-  description: string,
-  imageUri: string,
-  animation_url: string,
-  external_url: string,
-  creator_url: string,
-  attributesList: Attribute[],
-  plugins: any[],
-  collectionAddress: PublicKey,
-  creator: PublicKey,
-  feePayer: PublicKey,
-  network: "devnet" | "mainnet"
-) => {
-  try {
-    const extension = validateImageUri(imageUri);
-    const mimeType = getMimeType(extension);
-    console.log(
-      `Image validated. Extension: ${extension}, MIME type: ${mimeType}`
-    );
-
-    const umi = createUmiUploader(network);
-    const umiCreatorPublicKey = fromWeb3JsPublicKey(creator);
-    const umiFeePayerPublicKey = fromWeb3JsPublicKey(feePayer);
-    const umiCollectionAddress = fromWeb3JsPublicKey(collectionAddress);
-    const assetSigner = createNoopSigner(umiCreatorPublicKey);
-    const payerSigner = createNoopSigner(umiFeePayerPublicKey);
-    const collection = await fetchCollection(umi, umiCollectionAddress);
-    umi.use(signerIdentity(payerSigner));
-
-    const uri = await uploadJsonUmi(
-      {
-        name: name,
-        symbol: symbol,
-        description: description,
-        image: imageUri,
-        animation_url: animation_url,
-        external_url: external_url,
-        creator_url: creator_url,
-        attributes: attributesList,
-        properties: {
-          files: [
-            {
-              uri: `${imageUri}`,
-              type: mimeType,
-            },
-          ],
-          category: "image",
-          creators: [
-            {
-              address: creator.toBase58(),
-              share: 100,
-            },
-          ],
-        },
-      },
-      network
-    );
-
-    const txBuilder = await create(umi, {
-      asset: payerSigner,
-      collection,
-      name: name,
-      uri,
-      plugins: [
-        ...plugins,
-        {
-          type: "Attributes",
-          attributeList: attributesList,
-        },
-      ],
-    })
-      .prepend(setComputeUnitPrice(umi, { microLamports: 1000 }))
-      .buildAndSign(umi);
-    // });
-
     if (!txBuilder) {
       console.error("txBuilder is undefined");
       throw Error("Failed to retrieve builder");
     }
-    console.log("txBuilder is:", txBuilder);
-
-    // const currentConnection = createConnection("devnet");
-    // const blockhash = await getRecentBlockhashWithRetry(currentConnection);
-    // if (blockhash == undefined) {
-    //   console.error("Recent blockhash is undefined");
-    //   throw Error("Failed to retrieve blockhash");
-    // }
-    // console.log("Blockhash retrieved:", blockhash);
-
-    // const ixs = txBuilder.getInstructions();
-    // console.log("ixs retrieved:", ixs);
-
-    // const msg = new TransactionMessage({
-    //   payerKey: feePayer,
-    //   recentBlockhash: blockhash.blockhash as string,
-    //   instructions: [
-    //     ...ixs.map(convertMetaplexInstructionToTransactionInstruction),
-    //   ],
-    // }).compileToV0Message();
-
-    // return new VersionedTransaction(msg);
-    return txBuilder;
+    return umi.transactions.serialize(txBuilder);
   } catch (error) {
     console.error("Error creating metaplex nft", error);
     throw error;
@@ -429,36 +359,34 @@ export const fetchAssetsByCollectionAddress = async (
   }
 };
 
-export async function signAndSendLegacyTransaction(
+export async function signAndSendMetaplexTransaction(
+  umi: Umi,
   legacyTx: Transaction,
-  signers: Keypair[],
+  signers: Signer[],
   network: "devnet" | "mainnet"
 ): Promise<string> {
   try {
     if (signers.length !== 1 || !signers) {
       throw new Error(`Signers unavailable`);
     }
-    // const connection = createConnection(network);
-    const rpcUrl =
-      network === "devnet"
-        ? process.env.SOLANA_DEVNET_RPC_URL
-        : process.env.SOLANA_MAINNET_RPC_URL;
-    const solanaConnection = new Connection(rpcUrl!, "confirmed");
-    const umi = createUmi(solanaConnection).use(mplCore()).use(irysUploader());
-    const serializedTransaction = umi.transactions.serialize(legacyTx);
+
+    const mySignedTransaction = await signTransaction(legacyTx, signers);
+    const serializedTransaction =
+      umi.transactions.serialize(mySignedTransaction);
     console.log(
       `Encoded transaction is: `,
       Buffer.from(serializedTransaction).toString("base64")
     );
-    const txId = await umi.rpc.sendTransaction(legacyTx, {
+    const txId = await umi.rpc.sendTransaction(mySignedTransaction, {
       skipPreflight: true,
     });
     console.log(
       `Transaction sent with ID: ${Buffer.from(txId).toString("base64")}`
     );
 
+    const rtB = await umi.rpc.getLatestBlockhash();
     const confirmResult = await umi.rpc.confirmTransaction(txId, {
-      strategy: { type: "blockhash", ...(await umi.rpc.getLatestBlockhash()) },
+      strategy: { type: "blockhash", ...rtB },
     });
     console.log(`Confirmed tx: `, confirmResult);
 
