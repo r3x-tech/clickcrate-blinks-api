@@ -1,5 +1,12 @@
-import { Instruction } from "@metaplex-foundation/umi";
-import { PublicKey, TransactionInstruction } from "@solana/web3.js";
+import {
+  Instruction,
+  Transaction as MetaplexTransaction,
+} from "@metaplex-foundation/umi";
+import {
+  PublicKey,
+  TransactionInstruction,
+  Transaction as SolanaTransaction,
+} from "@solana/web3.js";
 
 export const getOriginFromString = (origin: string): any => {
   switch (origin) {

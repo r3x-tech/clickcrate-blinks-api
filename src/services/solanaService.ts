@@ -133,7 +133,7 @@ const createTransaction = async (
   return new VersionedTransaction(messageV0);
 };
 
-async function signAndSendTransaction(
+async function signAndSendVersionedTransaction(
   versionedTransaction: VersionedTransaction,
   signers: Keypair[],
   network: "devnet" | "mainnet"
@@ -232,7 +232,7 @@ async function createProducts(
   console.log("POS created!!!!!!!");
   // totalCost += await simulateAndGetCost(posCollectionNftTx, network);
   // console.log("Cost calculated");
-  const posTxSignature = await signAndSendTransaction(
+  const posTxSignature = await MetaplexService.signAndSendLegacyTransaction(
     posCollectionNftTx,
     [relayWalletKeypair],
     network
@@ -267,7 +267,7 @@ async function createProducts(
   console.log("Listing created!!!!!!!");
   // totalCost += await simulateAndGetCost(listingCollectionNftTx, network);
   // console.log("Cost updated");
-  const listingTxSignature = await signAndSendTransaction(
+  const listingTxSignature = await MetaplexService.signAndSendLegacyTransaction(
     listingCollectionNftTx,
     [relayWalletKeypair],
     network
@@ -315,11 +315,12 @@ async function createProducts(
     );
 
     // totalCost += await simulateAndGetCost(productNftTx, network);
-    const productTxSignature = await signAndSendTransaction(
-      productNftTx,
-      [relayWalletKeypair],
-      network
-    );
+    const productTxSignature =
+      await MetaplexService.signAndSendLegacyTransaction(
+        productNftTx,
+        [relayWalletKeypair],
+        network
+      );
     productNfts.push(productTxSignature);
   }
 
@@ -340,7 +341,6 @@ export {
   simulateAndGetCost,
   getRecentBlockhashWithRetry,
   createTransaction,
-  signAndSendTransaction,
   createProducts,
   relayPaymentTransaction,
 };
