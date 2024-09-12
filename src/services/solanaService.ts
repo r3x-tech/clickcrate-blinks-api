@@ -17,6 +17,7 @@ import { mplCore } from "@metaplex-foundation/mpl-core";
 import { irysUploader } from "@metaplex-foundation/umi-uploader-irys";
 import { createUmi } from "@metaplex-foundation/umi-bundle-defaults";
 import {
+  base58,
   createSignerFromKeypair,
   signTransaction,
 } from "@metaplex-foundation/umi";
@@ -51,15 +52,27 @@ async function getTransactionDetails(txSignature: string): Promise<any> {
     headers: myHeaders,
   };
 
-  const response = await fetch(
-    `https://api.shyft.to/sol/v1/transaction/parsed?network=devnet&txn_signature=${txSignature}`,
-    requestOptions
-  );
-  if (!response.ok) {
-    throw new Error(`HTTP error! status: ${response.status}`);
+  try {
+    const response = await fetch(
+      `https://api.shyft.to/sol/v1/transaction/parsed?network=devnet&txn_signature=${txSignature}`,
+      requestOptions
+    );
+    if (!response.ok) {
+      const errorBody = await response.text();
+      console.error(
+        `Shyft API error: ${response.status} ${response.statusText}`
+      );
+      console.error(`Error body: ${errorBody}`);
+      throw new Error(
+        `HTTP error! status: ${response.status}, body: ${errorBody}`
+      );
+    }
+    const result = await response.json();
+    return result;
+  } catch (error) {
+    console.error("Error in getTransactionDetails:", error);
+    throw error;
   }
-  const result = await response.json();
-  return result;
 }
 
 async function getRecentBlockhashWithRetry(
@@ -305,6 +318,9 @@ async function createProducts(
     listingTxSignatureUint8Array
   );
   console.log(`refetchedTX: `, refetchedTX);
+
+  const otherSignature = base58.deserialize(listingTxSignatureUint8Array)[0];
+  console.log(`otherSignature: `, otherSignature);
 
   // Get the listing collection NFT address
   const listingTxDetails = await getTransactionDetails(listingTxSignature);
