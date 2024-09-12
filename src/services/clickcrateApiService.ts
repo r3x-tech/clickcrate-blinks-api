@@ -57,9 +57,18 @@ export async function initiateVerification(email: string) {
     const response = await clickcrateAxios.post("/v1/initiate-verification", {
       email,
     });
-    return response.data;
+    return {
+      status: response.status,
+      data: response.data,
+    };
   } catch (error) {
     console.error("Error initiating verification:", error);
+    if (axios.isAxiosError(error)) {
+      return {
+        status: error.response?.status || 500,
+        data: error.response?.data || { message: "Unknown error occurred" },
+      };
+    }
     throw error;
   }
 }
@@ -70,9 +79,18 @@ export async function verifyCode(email: string, code: string) {
       email,
       code,
     });
-    return response.data;
+    return {
+      status: response.status,
+      data: response.data,
+    };
   } catch (error) {
     console.error("Error verifying code:", error);
+    if (axios.isAxiosError(error)) {
+      return {
+        status: error.response?.status || 500,
+        data: error.response?.data || { message: "Unknown error occurred" },
+      };
+    }
     throw error;
   }
 }

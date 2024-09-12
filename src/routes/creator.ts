@@ -175,8 +175,14 @@ router.post("/create-product", async (req, res) => {
     console.log("Initiating verification");
 
     const verificationResponse = await initiateVerification(email);
+    console.log("Verification initiation response:", verificationResponse);
+
     if (verificationResponse.status !== 200) {
-      throw Error("Verification failed. Please try again");
+      throw Error(
+        `Verification failed. Status: ${
+          verificationResponse.status
+        }, Message: ${JSON.stringify(verificationResponse.data)}`
+      );
     }
 
     console.log("Responding");
@@ -260,9 +266,12 @@ router.post("/verify-and-place", async (req, res) => {
 
     // Verify code using ClickCrate API
     const verificationResponse = await verifyCode(email as string, code);
-    console.log("verificationResponse is: ", verificationResponse);
+    console.log("Code verification response:", verificationResponse);
 
-    if (!verificationResponse.verified) {
+    if (
+      verificationResponse.status !== 200 ||
+      !verificationResponse.data.verified
+    ) {
       console.log("Invalid verification code!");
       return res.status(400).json({ error: "Invalid verification code" });
     }
@@ -277,6 +286,7 @@ router.post("/verify-and-place", async (req, res) => {
         manager: account,
       }
     );
+    console.log("registerPosResponse response:", registerPosResponse);
 
     // Activate ClickCrate POS
     const activatePosResponse = await axios.post(
@@ -285,6 +295,7 @@ router.post("/verify-and-place", async (req, res) => {
         clickcrateId: pos,
       }
     );
+    console.log("activatePosResponse response:", activatePosResponse);
 
     // Register Product Listing
     const registerListingResponse = await axios.post(
@@ -299,6 +310,7 @@ router.post("/verify-and-place", async (req, res) => {
         orderManager: "clickcrate",
       }
     );
+    console.log("registerListingResponse response:", registerListingResponse);
 
     // Activate Product Listing
     const activateListingResponse = await axios.post(
@@ -307,6 +319,7 @@ router.post("/verify-and-place", async (req, res) => {
         productListingId: listing,
       }
     );
+    console.log("activateListingResponse response:", activateListingResponse);
 
     // Place Product Listing in ClickCrate POS
     const placeProductResponse = await axios.post(
@@ -317,6 +330,7 @@ router.post("/verify-and-place", async (req, res) => {
         price: price,
       }
     );
+    console.log("placeProductResponse response:", placeProductResponse);
 
     const clickcrateId = pos;
     const blinkUrl = `${CLICKCRATE_API_URL}/blink/${clickcrateId}`;
