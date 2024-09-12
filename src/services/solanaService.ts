@@ -127,6 +127,23 @@ const relayPaymentTransaction = async (
   transaction.feePayer = fromPubkey;
 
   return transaction;
+
+  // const latestBlockhash = await connection.getLatestBlockhash();
+  // const msg = new TransactionMessage({
+  //   payerKey: fromPubkey,
+  //   recentBlockhash: latestBlockhash.blockhash,
+  //   instructions: [
+  //     SystemProgram.transfer({
+  //       fromPubkey,
+  //       toPubkey,
+  //       lamports,
+  //     }),
+  //   ],
+  // }).compileToV0Message();
+
+  // const txn = new VersionedTransaction(msg);
+
+  // return txn;
 };
 
 const createTransaction = async (
