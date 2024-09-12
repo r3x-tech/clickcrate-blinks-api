@@ -16,7 +16,6 @@ import * as MetaplexService from "../services/metaplexService";
 import { encryptShippingInfo } from "../utils/encryptionHelpers";
 
 const router = express.Router();
-const CLICKCRATE_API_URL = process.env.CLICKCRATE_API_URL;
 
 router.get("/", (req, res) => {
   try {

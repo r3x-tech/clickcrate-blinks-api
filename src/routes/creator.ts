@@ -172,7 +172,6 @@ router.post("/create-product", async (req, res, next) => {
       publicKey,
       "mainnet"
     );
-
     console.log("Initiating verification");
 
     const verificationResponse = await initiateVerification(email);
@@ -236,8 +235,11 @@ router.post("/create-product", async (req, res, next) => {
 // Step 3: Verify email, register, activate, and place product (POST)
 router.post("/verify-and-place", async (req, res, next) => {
   try {
-    const { code } = req.body;
     console.log("req.body is: ", req.body);
+    const code = req.body.data?.code;
+    console.log("Verification code:", code);
+    // const { code } = req.body;
+    // console.log("req.body is: ", req.body);
 
     const { pos, listing, products, price, account, listingNft, email } =
       req.query;
@@ -251,7 +253,6 @@ router.post("/verify-and-place", async (req, res, next) => {
       return res.status(400).json(errorResponse);
     }
 
-    // Verify code using ClickCrate API
     const verificationResponse = await verifyCode(email as string, code);
     console.log("Code verification response:", verificationResponse);
 
@@ -263,7 +264,6 @@ router.post("/verify-and-place", async (req, res, next) => {
       return res.status(400).json({ error: "Invalid verification code" });
     }
 
-    // Register ClickCrate POS
     const registerPosResponse = await registerClickCrate({
       clickcrateId: pos as string,
       eligiblePlacementType: "Twitter",
@@ -272,11 +272,9 @@ router.post("/verify-and-place", async (req, res, next) => {
     });
     console.log("registerPosResponse response:", registerPosResponse);
 
-    // Activate ClickCrate POS
     const activatePosResponse = await activateClickCrate(pos as string);
     console.log("activatePosResponse response:", activatePosResponse);
 
-    // Register Product Listing
     const registerListingResponse = await registerProductListing({
       productListingId: listing as string,
       origin: "ClickCrate",
@@ -288,13 +286,11 @@ router.post("/verify-and-place", async (req, res, next) => {
     });
     console.log("registerListingResponse response:", registerListingResponse);
 
-    // Activate Product Listing
     const activateListingResponse = await activateProductListing(
       listing as string
     );
     console.log("activateListingResponse response:", activateListingResponse);
 
-    // Place Product Listing in ClickCrate POS
     const placeProductResponse = await placeProductListing({
       productListingId: listing as string,
       clickcrateId: pos as string,

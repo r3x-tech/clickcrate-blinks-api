@@ -344,24 +344,24 @@ async function createProducts(
   const listingTxSignatureUint8Array = Uint8Array.from(
     Buffer.from(listingTxSignature, "base64")
   );
-  console.log(
-    "listingTxSignatureUint8Array: ",
-    base58.deserialize(listingTxSignatureUint8Array)
-  );
+  // console.log(
+  //   "listingTxSignatureUint8Array: ",
+  //   base58.deserialize(listingTxSignatureUint8Array)
+  // );
 
   const refetchedTX = await umi.rpc.getTransaction(
     listingTxSignatureUint8Array
   );
-  console.log(`refetchedTX: `, refetchedTX);
-  console.log(
-    `refetchedTX message: `,
-    Buffer.from(refetchedTX?.serializedMessage!).toString("base64")
-  );
-  console.log(`refetchedTX instructions: `, refetchedTX?.message.instructions);
-  console.log(
-    `refetchedTX inner instructions: `,
-    refetchedTX?.meta.innerInstructions
-  );
+  // console.log(`refetchedTX: `, refetchedTX);
+  // console.log(
+  //   `refetchedTX message: `,
+  //   Buffer.from(refetchedTX?.serializedMessage!).toString("base64")
+  // );
+  // console.log(`refetchedTX instructions: `, refetchedTX?.message.instructions);
+  // console.log(
+  //   `refetchedTX inner instructions: `,
+  //   refetchedTX?.meta.innerInstructions
+  // );
 
   const otherSignature = base58.deserialize(listingTxSignatureUint8Array)[0];
   console.log(`otherSignature: `, otherSignature);
@@ -369,10 +369,10 @@ async function createProducts(
   // Get the listing collection NFT address
   const listingTxDetails = await getTransactionDetails(otherSignature);
   let listingCollectionNftAddress: string | undefined;
-  console.log(
-    `Fetched listingTxDetails: `,
-    JSON.stringify(listingTxDetails, null, 2)
-  );
+  // console.log(
+  //   `Fetched listingTxDetails: `,
+  //   JSON.stringify(listingTxDetails, null, 2)
+  // );
 
   if (
     listingTxDetails &&
