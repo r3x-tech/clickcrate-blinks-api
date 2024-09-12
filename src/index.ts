@@ -1,7 +1,7 @@
 import dotenv from "dotenv";
 dotenv.config();
 
-import express, { Express } from "express";
+import express, { Express, Request, Response, NextFunction } from "express";
 import cors from "cors";
 import productCreatorRoutes from "./routes/creator";
 import shippingInfoRoutes from "./routes/shipping";
@@ -12,12 +12,13 @@ const app: Express = express();
 const port = process.env.PORT || 8080;
 
 app.use(express.json());
-app.use(cors(ACTIONS_CORS_HEADERS_MIDDLEWARE));
-// app.use(cors());
-// app.use((req, res, next) => {
-//   res.set(ACTIONS_CORS_HEADERS_MIDDLEWARE);
-//   next();
-// });
+// app.use(cors(ACTIONS_CORS_HEADERS_MIDDLEWARE));
+app.use((req: Request, res: Response, next: NextFunction) => {
+  res.set(ACTIONS_CORS_HEADERS_MIDDLEWARE);
+  next();
+});
+app.use(cors());
+app.options("*", cors());
 
 app.get("/", (req, res) => {
   res.send("Welcome to ClickCrate Actions API!");

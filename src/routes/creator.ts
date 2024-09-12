@@ -7,6 +7,7 @@ import {
   ProductTypes,
 } from "../models/schemas";
 import {
+  ActionError,
   ActionGetResponse,
   ActionPostResponse,
   ACTIONS_CORS_HEADERS_MIDDLEWARE,
@@ -19,20 +20,20 @@ import {
 import { z } from "zod";
 
 const router = express.Router();
-const blinkCorsMiddleware = (
-  req: express.Request,
-  res: express.Response,
-  next: express.NextFunction
-) => {
-  res.set(ACTIONS_CORS_HEADERS_MIDDLEWARE);
-  if (req.method === "OPTIONS") {
-    return res.status(200).json({
-      body: "OK",
-    });
-  }
-  next();
-};
-router.use(blinkCorsMiddleware);
+// const blinkCorsMiddleware = (
+//   req: express.Request,
+//   res: express.Response,
+//   next: express.NextFunction
+// ) => {
+//   res.set(ACTIONS_CORS_HEADERS_MIDDLEWARE);
+//   if (req.method === "OPTIONS") {
+//     return res.status(200).json({
+//       body: "OK",
+//     });
+//   }
+//   next();
+// };
+// router.use(blinkCorsMiddleware);
 
 const CLICKCRATE_API_URL = process.env.CLICKCRATE_API_URL;
 
@@ -108,7 +109,10 @@ router.get("/", (req, res) => {
     res.status(200).json(responseBody);
   } catch (error) {
     console.error("Error in GET /:", error);
-    res.status(500).json({ error: "Internal server error 0" });
+    const errorResponse: ActionError = {
+      message: "Internal server error",
+    };
+    res.status(500).json(errorResponse);
   }
 });
 
@@ -211,11 +215,15 @@ router.post("/create-product", async (req, res) => {
   } catch (error) {
     console.error("Error in POST /create-product:", error);
     if (error instanceof z.ZodError) {
-      res
-        .status(400)
-        .json({ error: "Invalid input data", details: error.errors });
+      const errorResponse: ActionError = {
+        message: "Invalid input data",
+      };
+      res.status(400).json(errorResponse);
     } else {
-      res.status(500).json({ error: "Internal server error 1" });
+      const errorResponse: ActionError = {
+        message: "Internal server error",
+      };
+      res.status(500).json(errorResponse);
     }
   }
 });
@@ -225,7 +233,15 @@ router.post("/verify-and-place", async (req, res) => {
   try {
     const { code } = req.body;
 
-    const { email, pos, listing, products, price, account } = req.headers;
+    const { pos, listing, products, price, account, listingNft, email } =
+      req.query;
+
+    if (!email || !pos || !listing || !products || !price || !account) {
+      const errorResponse: ActionError = {
+        message: "Missing required parameters",
+      };
+      return res.status(400).json(errorResponse);
+    }
 
     // Verify code using ClickCrate API
     const verificationResponse = await axios.post(
@@ -301,7 +317,10 @@ router.post("/verify-and-place", async (req, res) => {
     res.status(200).json(responseBody);
   } catch (error) {
     console.error("Error in POST /verify-and-place:", error);
-    res.status(500).json({ error: "Internal server error 2" });
+    const errorResponse: ActionError = {
+      message: "Internal server error",
+    };
+    res.status(500).json(errorResponse);
   }
 });
 
