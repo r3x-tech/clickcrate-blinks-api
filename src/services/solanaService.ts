@@ -53,11 +53,17 @@ async function getTransactionDetails(txSignature: string): Promise<any> {
   };
 
   try {
-    const signatureBuffer = Buffer.from(txSignature, "base64");
-    const base58Signature = new PublicKey(signatureBuffer).toBase58();
+    // const signatureBuffer = Buffer.from(txSignature, "base64");
+    // const base58Signature = new PublicKey(signatureBuffer).toBase58();
 
+    // const response = await fetch(
+    //   `https://api.shyft.to/sol/v1/transaction/parsed?network=devnet&txn_signature=${base58Signature}`,
+    //   requestOptions
+    // );
+
+    console.log("Fetching transaction details for signature:", txSignature);
     const response = await fetch(
-      `https://api.shyft.to/sol/v1/transaction/parsed?network=devnet&txn_signature=${base58Signature}`,
+      `https://api.shyft.to/sol/v1/transaction/parsed?network=devnet&txn_signature=${txSignature}`,
       requestOptions
     );
     if (!response.ok) {
@@ -71,6 +77,7 @@ async function getTransactionDetails(txSignature: string): Promise<any> {
       );
     }
     const result = await response.json();
+    console.log("Shyft API response:", JSON.stringify(result, null, 2));
     return result;
   } catch (error) {
     console.error("Error in getTransactionDetails:", error);
@@ -313,6 +320,7 @@ async function createProducts(
       network
     );
   console.log("Listing created!!!!!!!");
+  await new Promise((resolve) => setTimeout(resolve, 10000)); // 10 seconds delay
 
   const listingTxSignatureUint8Array = Uint8Array.from(
     Buffer.from(listingTxSignature, "base64")
@@ -328,17 +336,37 @@ async function createProducts(
   // Get the listing collection NFT address
   const listingTxDetails = await getTransactionDetails(listingTxSignature);
   let listingCollectionNftAddress: string | undefined;
-  console.log(`fetched listingTxDetails: `, listingTxDetails);
+  console.log(
+    `Fetched listingTxDetails: `,
+    JSON.stringify(listingTxDetails, null, 2)
+  );
 
-  for (const action of listingTxDetails.result.actions) {
-    if (action.type === "NFT_MINT") {
-      listingCollectionNftAddress = action.info.nft_address;
-      console.log("Found mint!!!!!!!");
-      break;
+  if (
+    listingTxDetails &&
+    listingTxDetails.result &&
+    listingTxDetails.result.actions
+  ) {
+    console.log("Actions found in transaction details");
+    for (const action of listingTxDetails.result.actions) {
+      console.log("Processing action:", action.type);
+      if (action.type === "NFT_MINT") {
+        listingCollectionNftAddress = action.info.nft_address;
+        console.log(
+          "Found NFT_MINT action! NFT address:",
+          listingCollectionNftAddress
+        );
+        break;
+      }
     }
+  } else {
+    console.log("No actions found in transaction details");
   }
 
   if (!listingCollectionNftAddress) {
+    console.error(
+      "Full transaction details:",
+      JSON.stringify(listingTxDetails, null, 2)
+    );
     throw new Error(
       "Failed to find NFT_MINT action in listing collection transaction"
     );
