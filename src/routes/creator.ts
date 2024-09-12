@@ -166,8 +166,8 @@ router.post("/create-product", async (req, res) => {
     await axios.post(`${CLICKCRATE_API_URL}/initiate-verification`, { email });
 
     const responseBody: ActionPostResponse = {
-      // transaction: Buffer.from(relayTx.serialize()).toString("base64"),
-      transaction: relayTx.serialize().toString(),
+      transaction: Buffer.from(relayTx.serialize()).toString("base64"),
+      // transaction: relayTx.serialize().toString(),
       message:
         "Products created. Please check your email for the verification code.",
       links: {

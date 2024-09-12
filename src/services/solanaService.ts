@@ -114,36 +114,36 @@ const relayPaymentTransaction = async (
   const toPubkey = relayWalletKeypair.publicKey;
   const lamports = Math.round(amount * LAMPORTS_PER_SOL);
 
-  const transaction = new Transaction().add(
-    SystemProgram.transfer({
-      fromPubkey,
-      toPubkey,
-      lamports,
-    })
-  );
-
-  const latestBlockhash = await connection.getLatestBlockhash();
-  transaction.recentBlockhash = latestBlockhash.blockhash;
-  transaction.feePayer = fromPubkey;
-
-  return transaction;
+  // const transaction = new Transaction().add(
+  //   SystemProgram.transfer({
+  //     fromPubkey,
+  //     toPubkey,
+  //     lamports,
+  //   })
+  // );
 
   // const latestBlockhash = await connection.getLatestBlockhash();
-  // const msg = new TransactionMessage({
-  //   payerKey: fromPubkey,
-  //   recentBlockhash: latestBlockhash.blockhash,
-  //   instructions: [
-  //     SystemProgram.transfer({
-  //       fromPubkey,
-  //       toPubkey,
-  //       lamports,
-  //     }),
-  //   ],
-  // }).compileToV0Message();
+  // transaction.recentBlockhash = latestBlockhash.blockhash;
+  // transaction.feePayer = fromPubkey;
 
-  // const txn = new VersionedTransaction(msg);
+  // return transaction;
 
-  // return txn;
+  const latestBlockhash = await connection.getLatestBlockhash();
+  const msg = new TransactionMessage({
+    payerKey: fromPubkey,
+    recentBlockhash: latestBlockhash.blockhash,
+    instructions: [
+      SystemProgram.transfer({
+        fromPubkey,
+        toPubkey,
+        lamports,
+      }),
+    ],
+  }).compileToV0Message();
+
+  const txn = new VersionedTransaction(msg);
+
+  return txn;
 };
 
 const createTransaction = async (
