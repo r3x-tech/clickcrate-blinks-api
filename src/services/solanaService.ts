@@ -53,19 +53,19 @@ async function getTransactionDetails(txSignature: string): Promise<any> {
   };
 
   try {
-    // const signatureBuffer = Buffer.from(txSignature, "base64");
-    // const base58Signature = new PublicKey(signatureBuffer).toBase58();
+    const signatureBuffer = Buffer.from(txSignature, "base64");
+    const base58Signature = new PublicKey(signatureBuffer).toBase58();
 
-    // const response = await fetch(
-    //   `https://api.shyft.to/sol/v1/transaction/parsed?network=devnet&txn_signature=${base58Signature}`,
-    //   requestOptions
-    // );
-
-    console.log("Fetching transaction details for signature:", txSignature);
     const response = await fetch(
-      `https://api.shyft.to/sol/v1/transaction/parsed?network=devnet&txn_signature=${txSignature}`,
+      `https://api.shyft.to/sol/v1/transaction/parsed?network=devnet&txn_signature=${base58Signature}`,
       requestOptions
     );
+
+    // console.log("Fetching transaction details for signature:", txSignature);
+    // const response = await fetch(
+    //   `https://api.shyft.to/sol/v1/transaction/parsed?network=devnet&txn_signature=${txSignature}`,
+    //   requestOptions
+    // );
     if (!response.ok) {
       const errorBody = await response.text();
       console.error(
