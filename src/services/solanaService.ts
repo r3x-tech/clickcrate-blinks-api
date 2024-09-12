@@ -53,8 +53,13 @@ async function getTransactionDetails(txSignature: string): Promise<any> {
   };
 
   try {
+    const signatureUint8Array = Uint8Array.from(
+      Buffer.from(txSignature, "base64")
+    ).toString();
+    const base58Signature = base58.serialize(signatureUint8Array)[0];
+
     const response = await fetch(
-      `https://api.shyft.to/sol/v1/transaction/parsed?network=devnet&txn_signature=${txSignature}`,
+      `https://api.shyft.to/sol/v1/transaction/parsed?network=devnet&txn_signature=${base58Signature}`,
       requestOptions
     );
     if (!response.ok) {
@@ -327,11 +332,13 @@ async function createProducts(
   let listingCollectionNftAddress: string | undefined;
   console.log(`fetched listingTxDetails: `, listingTxDetails);
 
-  for (const action of listingTxDetails.result.actions) {
-    if (action.type === "NFT_MINT") {
-      listingCollectionNftAddress = action.info.nft_address;
-      console.log("Found mint!!!!!!!");
-      break;
+  if (listingTxDetails && listingTxDetails.actions) {
+    for (const action of listingTxDetails.actions) {
+      if (action.type === "NFT_MINT") {
+        listingCollectionNftAddress = action.info.nft_address;
+        console.log("Found mint!!!!!!!");
+        break;
+      }
     }
   }
 
