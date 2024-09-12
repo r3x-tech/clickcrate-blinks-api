@@ -12,34 +12,6 @@ const clickcrateAxios = axios.create({
   },
 });
 
-// export async function createProductListing(productInfo: ProductInfo) {
-//   try {
-//     const response = await clickcrateAxios.post(
-//       "/v1/product-listing/register",
-//       productInfo
-//     );
-//     return response.data;
-//   } catch (error) {
-//     console.error("Error creating product listing:", error);
-//     throw error;
-//   }
-// }
-
-// export async function activateProductListing(productListingId: string) {
-//   try {
-//     const response = await clickcrateAxios.post(
-//       "/v1/product-listing/activate",
-//       {
-//         productListingId,
-//       }
-//     );
-//     return response.data;
-//   } catch (error) {
-//     console.error("Error activating product listing:", error);
-//     throw error;
-//   }
-// }
-
 export async function generateBlinkUrl(posId: string) {
   try {
     return `https://api.clickcrate.xyz/blink/${posId}`;
