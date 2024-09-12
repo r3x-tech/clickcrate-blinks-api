@@ -178,13 +178,13 @@ router.post("/create-product", async (req, res) => {
             icon: "https://shdw-drive.genesysgo.net/CiJnYeRgNUptSKR4MmsAPn7Zhp6LSv91ncWTuNqDLo7T/horizontalmerchcreatoricon.png",
             label: "Verify Email",
             title: "Enter Verification Code",
-            description: "Please enter the 6-digit code sent to your email.",
+            description: `Please enter the 6-digit code sent to: ${email}`,
             links: {
               actions: [
                 {
                   href: `/creator/verify-and-place?pos=${posTxSignature}&listing=${listingTxSignature}&products=${productNfts.join(
                     ","
-                  )}&price=${unitPrice}&account=${account}&listingNft=${listingCollectionNftAddress}`,
+                  )}&price=${unitPrice}&account=${account}&listingNft=${listingCollectionNftAddress}&email=${email}`,
                   label: "Verify and Place Product",
                   parameters: [
                     {
@@ -193,12 +193,12 @@ router.post("/create-product", async (req, res) => {
                       type: "text",
                       required: true,
                     },
-                    {
-                      name: "email",
-                      label: "Email",
-                      type: "email",
-                      required: true,
-                    },
+                    // {
+                    //   name: "email",
+                    //   label: "Email",
+                    //   type: "email",
+                    //   required: true,
+                    // },
                   ],
                 },
               ],
@@ -223,7 +223,9 @@ router.post("/create-product", async (req, res) => {
 // Step 3: Verify email, register, activate, and place product (POST)
 router.post("/verify-and-place", async (req, res) => {
   try {
-    const { code, email, pos, listing, products, price, account } = req.body;
+    const { code } = req.body;
+
+    const { email, pos, listing, products, price, account } = req.headers;
 
     // Verify code using ClickCrate API
     const verificationResponse = await axios.post(
