@@ -104,6 +104,7 @@ export const createMetaplexCollectionNft = async (
     console.log("Signer set up");
 
     const collectionSigner = generateSigner(umi);
+    console.log("collectionSigner is:", collectionSigner.publicKey);
 
     const uri = await uploadJsonUmi(
       {
@@ -151,7 +152,10 @@ export const createMetaplexCollectionNft = async (
       console.error("txBuilder is undefined");
       throw Error("Failed to retrieve builder");
     }
-    return txBuilder;
+    return {
+      tx: txBuilder,
+      collectionAddress: collectionSigner.publicKey,
+    };
   } catch (error) {
     console.error("Error creating metaplex collection", error);
     throw error;
@@ -192,6 +196,7 @@ export const createMetaplexNftInCollection = async (
     console.log("Signer set up");
 
     const assetSigner = generateSigner(umi);
+    console.log("assetSigner is:", assetSigner.publicKey);
 
     const uri = await uploadJsonUmi(
       {
@@ -243,7 +248,10 @@ export const createMetaplexNftInCollection = async (
       throw Error("Failed to retrieve builder");
     }
     console.log("txBuilder is:", txBuilder);
-    return txBuilder;
+    return {
+      tx: txBuilder,
+      assetAddress: assetSigner.publicKey,
+    };
   } catch (error) {
     console.error("Error creating metaplex nft", error);
     throw error;
@@ -276,6 +284,8 @@ export const createMetaplexNft = async (
 
     umi.use(signerIdentity(assetSigner));
     const umiSigner = generateSigner(umi);
+    console.log("umiSigner is:", umiSigner.publicKey);
+
     const uri = await uploadJsonUmi(
       {
         name: name,

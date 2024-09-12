@@ -160,9 +160,11 @@ router.post("/create-product", async (req, res, next) => {
     const {
       totalCost,
       posTxSignature,
+      posCollectionAddress,
       listingTxSignature,
-      productNfts,
-      listingCollectionNftAddress,
+      listingCollectionAddress,
+      productTxSigs,
+      productAddresses,
     } = await createProducts(productInfo, publicKey, "devnet");
 
     console.log("Relaying tx");
@@ -204,9 +206,9 @@ router.post("/create-product", async (req, res, next) => {
             links: {
               actions: [
                 {
-                  href: `/creator/verify-and-place?pos=${posTxSignature}&listing=${listingTxSignature}&products=${productNfts.join(
+                  href: `/creator/verify-and-place?pos=${posCollectionAddress}&listing=${listingCollectionAddress}&products=${productAddresses.join(
                     ","
-                  )}&price=${unitPrice}&account=${account}&listingNft=${listingCollectionNftAddress}&email=${email}`,
+                  )}&price=${unitPrice}&account=${account}&email=${email}`,
                   label: "Verify and Place Product",
                   parameters: [
                     {
@@ -241,8 +243,7 @@ router.post("/verify-and-place", async (req, res, next) => {
     // const { code } = req.body;
     // console.log("req.body is: ", req.body);
 
-    const { pos, listing, products, price, account, listingNft, email } =
-      req.query;
+    const { pos, listing, products, price, account, email } = req.query;
     console.log("req.query: ", req.query);
 
     if (!email || !pos || !listing || !products || !price || !account) {

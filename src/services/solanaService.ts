@@ -268,26 +268,27 @@ async function createProducts(
   const productSigner = createSignerFromKeypair(umi, metaRelayWalletKp);
 
   // Create ClickCrate POS Collection NFT
-  const posCollectionNftTx = await MetaplexService.createMetaplexCollectionNft(
-    `${name} ClickCrate POS`,
-    "CPOS",
-    `${name} ClickCrate POS`,
-    imageUri,
-    ``,
-    `https://www.clickcrate.xyz/`,
-    `https://www.clickcrate.xyz/`,
-    [
-      { key: "Type", value: "ClickCrate" },
-      { key: "Placement Type", value: "Related Purchase" },
-      { key: "Additional Placement Requirements", value: "None" },
-      { key: "Placement Fee (USDC)", value: "0" },
-      { key: "User Profile Uri", value: "None" },
-    ],
-    [],
-    publicKey,
-    relayWalletKeypair.publicKey,
-    network
-  );
+  const { tx: posCollectionNftTx, collectionAddress: posCollectionAddress } =
+    await MetaplexService.createMetaplexCollectionNft(
+      `${name} ClickCrate POS`,
+      "CPOS",
+      `${name} ClickCrate POS`,
+      imageUri,
+      ``,
+      `https://www.clickcrate.xyz/`,
+      `https://www.clickcrate.xyz/`,
+      [
+        { key: "Type", value: "ClickCrate" },
+        { key: "Placement Type", value: "Related Purchase" },
+        { key: "Additional Placement Requirements", value: "None" },
+        { key: "Placement Fee (USDC)", value: "0" },
+        { key: "User Profile Uri", value: "None" },
+      ],
+      [],
+      publicKey,
+      relayWalletKeypair.publicKey,
+      network
+    );
 
   console.log("POS created!!!!!!!");
   // totalCost += await simulateAndGetCost(posCollectionNftTx, network);
@@ -299,34 +300,35 @@ async function createProducts(
     [productSigner],
     network
   );
-
   console.log(`POS transaction sig: `, posTxSignature);
 
   // Create Product Listing Collection NFT
-  const listingCollectionNftTx =
-    await MetaplexService.createMetaplexCollectionNft(
-      `${name}`,
-      "PLCC",
-      `${description}`,
-      imageUri,
-      ``,
-      `https://www.clickcrate.xyz/`,
-      `https://www.clickcrate.xyz/`,
-      [
-        { key: "Type", value: "Product Listing" },
-        { key: "Product Category", value: "Clothing" },
-        { key: "Brand", value: "ClickCrate" },
-        { key: "Size(s)", value: "Unisex" },
-        { key: "Placement Type", value: "Related Purchase" },
-        { key: "Additional Placement Requirements", value: "None" },
-        { key: "Discount", value: "None" },
-        { key: "Customer Profile Uri", value: "None" },
-      ],
-      [],
-      publicKey,
-      relayWalletKeypair.publicKey,
-      network
-    );
+  const {
+    tx: listingCollectionNftTx,
+    collectionAddress: listingCollectionAddress,
+  } = await MetaplexService.createMetaplexCollectionNft(
+    `${name}`,
+    "PLCC",
+    `${description}`,
+    imageUri,
+    ``,
+    `https://www.clickcrate.xyz/`,
+    `https://www.clickcrate.xyz/`,
+    [
+      { key: "Type", value: "Product Listing" },
+      { key: "Product Category", value: "Clothing" },
+      { key: "Brand", value: "ClickCrate" },
+      { key: "Size(s)", value: "Unisex" },
+      { key: "Placement Type", value: "Related Purchase" },
+      { key: "Additional Placement Requirements", value: "None" },
+      { key: "Discount", value: "None" },
+      { key: "Customer Profile Uri", value: "None" },
+    ],
+    [],
+    publicKey,
+    relayWalletKeypair.publicKey,
+    network
+  );
 
   // totalCost += await simulateAndGetCost(listingCollectionNftTx, network);
   // console.log("Cost updated");
@@ -382,14 +384,6 @@ async function createProducts(
     console.log("Actions found in transaction details");
     for (const action of listingTxDetails.result.actions) {
       console.log("Processing action:", action.type);
-      // if (action.type === "NFT_MINT") {
-      //   listingCollectionNftAddress = action.info.nft_address;
-      //   console.log(
-      //     "Found NFT_MINT action! NFT address:",
-      //     listingCollectionNftAddress
-      //   );
-      //   break;
-      // }
       if (
         action.type === "SOL_TRANSFER" &&
         action.parent_protocol ===
@@ -418,30 +412,33 @@ async function createProducts(
   }
 
   // Create Product NFTs
-  const productNfts = [];
+  const productTxSigs = [];
+  const productAddresses = [];
   for (let i = 0; i < quantity; i++) {
-    const productNftTx = await MetaplexService.createMetaplexNftInCollection(
-      `${name} #${i + 1}`,
-      `PCC${i}`,
-      `${description}`,
-      imageUri,
-      "",
-      `https://www.clickcrate.xyz/`,
-      `https://www.clickcrate.xyz/`,
-      [
-        { key: "Type", value: "Product" },
-        { key: "Product Category", value: "Clothing" },
-        { key: "Brand", value: "ClickCrate" },
-        { key: "Size", value: "Unisex" },
-      ],
-      [],
-      new PublicKey(listingCollectionNftAddress),
-      publicKey,
-      relayWalletKeypair.publicKey,
-      network
-    );
+    const { tx: productNftTx, assetAddress: productAddress } =
+      await MetaplexService.createMetaplexNftInCollection(
+        `${name} #${i + 1}`,
+        `PCC${i}`,
+        `${description}`,
+        imageUri,
+        "",
+        `https://www.clickcrate.xyz/`,
+        `https://www.clickcrate.xyz/`,
+        [
+          { key: "Type", value: "Product" },
+          { key: "Product Category", value: "Clothing" },
+          { key: "Brand", value: "ClickCrate" },
+          { key: "Size", value: "Unisex" },
+        ],
+        [],
+        new PublicKey(listingCollectionNftAddress),
+        publicKey,
+        relayWalletKeypair.publicKey,
+        network
+      );
 
     // totalCost += await simulateAndGetCost(productNftTx, network);
+
     const productTxSignature =
       await MetaplexService.signAndSendMetaplexTransaction(
         umi,
@@ -449,18 +446,21 @@ async function createProducts(
         [productSigner],
         network
       );
-    productNfts.push(productTxSignature);
+    productTxSigs.push(productTxSignature);
+    productAddresses.push(productAddress);
   }
 
-  totalCost = Math.round((2 + productNfts.length) * 0.007 * 1000) / 1000;
+  totalCost = Math.round((2 + productTxSigs.length) * 0.007 * 1000) / 1000;
   console.log("Cost finalized: ", totalCost);
 
   return {
     totalCost,
     posTxSignature,
+    posCollectionAddress,
     listingTxSignature,
-    productNfts,
-    listingCollectionNftAddress,
+    listingCollectionAddress,
+    productTxSigs,
+    productAddresses,
   };
 }
 
