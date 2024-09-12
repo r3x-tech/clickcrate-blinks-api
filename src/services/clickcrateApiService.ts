@@ -42,10 +42,7 @@ const clickcrateAxios = axios.create({
 
 export async function generateBlinkUrl(posId: string) {
   try {
-    const response = await clickcrateAxios.post("/v1/blink/generate", {
-      posId,
-    });
-    return response.data.blinkUrl;
+    return `https://api.clickcrate.xyz/blink/${posId}`;
   } catch (error) {
     console.error("Error generating Blink URL:", error);
     throw error;
