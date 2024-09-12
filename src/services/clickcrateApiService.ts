@@ -4,17 +4,19 @@ import { ProductInfo } from "../models/schemas";
 const CLICKCRATE_API_URL = process.env.CLICKCRATE_API_URL;
 const CLICKCRATE_API_KEY = process.env.CLICKCRATE_API_KEY;
 
+const clickcrateAxios = axios.create({
+  baseURL: CLICKCRATE_API_URL,
+  headers: {
+    Authorization: `Bearer ${CLICKCRATE_API_KEY}`,
+    "Content-Type": "application/json",
+  },
+});
+
 export async function createProductListing(productInfo: ProductInfo) {
   try {
-    const response = await axios.post(
-      `${CLICKCRATE_API_URL}/v1/product-listing/register`,
-      productInfo,
-      {
-        headers: {
-          Authorization: `Bearer ${CLICKCRATE_API_KEY}`,
-          "Content-Type": "application/json",
-        },
-      }
+    const response = await clickcrateAxios.post(
+      "/v1/product-listing/register",
+      productInfo
     );
     return response.data;
   } catch (error) {
@@ -25,14 +27,10 @@ export async function createProductListing(productInfo: ProductInfo) {
 
 export async function activateProductListing(productListingId: string) {
   try {
-    const response = await axios.post(
-      `${CLICKCRATE_API_URL}/v1/product-listing/activate`,
-      { productListingId },
+    const response = await clickcrateAxios.post(
+      "/v1/product-listing/activate",
       {
-        headers: {
-          Authorization: `Bearer ${CLICKCRATE_API_KEY}`,
-          "Content-Type": "application/json",
-        },
+        productListingId,
       }
     );
     return response.data;
@@ -44,19 +42,24 @@ export async function activateProductListing(productListingId: string) {
 
 export async function generateBlinkUrl(posId: string) {
   try {
-    const response = await axios.post(
-      `${CLICKCRATE_API_URL}/v1/blink/generate`,
-      { posId },
-      {
-        headers: {
-          Authorization: `Bearer ${CLICKCRATE_API_KEY}`,
-          "Content-Type": "application/json",
-        },
-      }
-    );
+    const response = await clickcrateAxios.post("/v1/blink/generate", {
+      posId,
+    });
     return response.data.blinkUrl;
   } catch (error) {
     console.error("Error generating Blink URL:", error);
+    throw error;
+  }
+}
+
+export async function initiateVerification(email: string) {
+  try {
+    const response = await clickcrateAxios.post("/v1/initiate-verification", {
+      email,
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Error initiating verification:", error);
     throw error;
   }
 }

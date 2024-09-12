@@ -18,6 +18,7 @@ import {
   relayPaymentTransaction,
 } from "../services/solanaService";
 import { z } from "zod";
+import { initiateVerification } from "../services/clickcrateApiService";
 
 const router = express.Router();
 // const blinkCorsMiddleware = (
@@ -169,9 +170,12 @@ router.post("/create-product", async (req, res) => {
       "mainnet"
     );
 
-    console.log("Initiating verficiation");
+    console.log("Initiating verification");
 
-    await axios.post(`${CLICKCRATE_API_URL}/initiate-verification`, { email });
+    const verificationResponse = await initiateVerification(email);
+    if (verificationResponse.status !== 200) {
+      throw Error("Verification failed. Please try again");
+    }
 
     console.log("Responding");
 
@@ -227,7 +231,7 @@ router.post("/create-product", async (req, res) => {
       res.status(400).json(errorResponse);
     } else {
       const errorResponse: ActionError = {
-        message: "Internal server error",
+        message: `${error}`,
       };
       res.status(500).json(errorResponse);
     }
