@@ -238,11 +238,14 @@ router.post("/create-product", async (req, res) => {
 router.post("/verify-and-place", async (req, res) => {
   try {
     const { code } = req.body;
+    console.log("req.body is: ", req.body);
 
     const { pos, listing, products, price, account, listingNft, email } =
       req.query;
+    console.log("req.query: ", req.query);
 
     if (!email || !pos || !listing || !products || !price || !account) {
+      console.error("Missing required parameters!!! in verify-place");
       const errorResponse: ActionError = {
         message: "Missing required parameters",
       };
