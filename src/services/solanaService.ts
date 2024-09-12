@@ -17,10 +17,10 @@ import { mplCore } from "@metaplex-foundation/mpl-core";
 import { irysUploader } from "@metaplex-foundation/umi-uploader-irys";
 import { createUmi } from "@metaplex-foundation/umi-bundle-defaults";
 import {
-  base58,
   createSignerFromKeypair,
   signTransaction,
 } from "@metaplex-foundation/umi";
+import { base58 } from "@metaplex-foundation/umi/serializers";
 
 require("dotenv").config();
 
@@ -53,10 +53,8 @@ async function getTransactionDetails(txSignature: string): Promise<any> {
   };
 
   try {
-    const signatureUint8Array = Uint8Array.from(
-      Buffer.from(txSignature, "base64")
-    ).toString();
-    const base58Signature = base58.serialize(signatureUint8Array)[0];
+    const signatureBuffer = Buffer.from(txSignature, "base64");
+    const base58Signature = new PublicKey(signatureBuffer).toBase58();
 
     const response = await fetch(
       `https://api.shyft.to/sol/v1/transaction/parsed?network=devnet&txn_signature=${base58Signature}`,
@@ -332,13 +330,11 @@ async function createProducts(
   let listingCollectionNftAddress: string | undefined;
   console.log(`fetched listingTxDetails: `, listingTxDetails);
 
-  if (listingTxDetails && listingTxDetails.actions) {
-    for (const action of listingTxDetails.actions) {
-      if (action.type === "NFT_MINT") {
-        listingCollectionNftAddress = action.info.nft_address;
-        console.log("Found mint!!!!!!!");
-        break;
-      }
+  for (const action of listingTxDetails.result.actions) {
+    if (action.type === "NFT_MINT") {
+      listingCollectionNftAddress = action.info.nft_address;
+      console.log("Found mint!!!!!!!");
+      break;
     }
   }
 
