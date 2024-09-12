@@ -325,10 +325,24 @@ async function createProducts(
   const listingTxSignatureUint8Array = Uint8Array.from(
     Buffer.from(listingTxSignature, "base64")
   );
+  console.log(
+    "listingTxSignatureUint8Array: ",
+    base58.deserialize(listingTxSignatureUint8Array)
+  );
+
   const refetchedTX = await umi.rpc.getTransaction(
     listingTxSignatureUint8Array
   );
   console.log(`refetchedTX: `, refetchedTX);
+  console.log(
+    `refetchedTX message: `,
+    Buffer.from(refetchedTX?.serializedMessage!).toString("base64")
+  );
+  console.log(`refetchedTX instructions: `, refetchedTX?.message.instructions);
+  console.log(
+    `refetchedTX inner instructions: `,
+    refetchedTX?.meta.innerInstructions
+  );
 
   const otherSignature = base58.deserialize(listingTxSignatureUint8Array)[0];
   console.log(`otherSignature: `, otherSignature);
@@ -349,10 +363,22 @@ async function createProducts(
     console.log("Actions found in transaction details");
     for (const action of listingTxDetails.result.actions) {
       console.log("Processing action:", action.type);
-      if (action.type === "NFT_MINT") {
-        listingCollectionNftAddress = action.info.nft_address;
+      // if (action.type === "NFT_MINT") {
+      //   listingCollectionNftAddress = action.info.nft_address;
+      //   console.log(
+      //     "Found NFT_MINT action! NFT address:",
+      //     listingCollectionNftAddress
+      //   );
+      //   break;
+      // }
+      if (
+        action.type === "SOL_TRANSFER" &&
+        action.parent_protocol ===
+          "CoREENxT6tW1HoK8ypY1SxRMZTcVPm7R94rH4PZNhX7d"
+      ) {
+        listingCollectionNftAddress = action.info.receiver;
         console.log(
-          "Found NFT_MINT action! NFT address:",
+          "Found SOL_TRANSFER action! NFT address:",
           listingCollectionNftAddress
         );
         break;
