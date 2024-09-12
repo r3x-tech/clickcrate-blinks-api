@@ -52,7 +52,7 @@ async function getTransactionDetails(txSignature: string): Promise<any> {
   };
 
   const response = await fetch(
-    `https://api.shyft.to/sol/v1/transaction/parsed?network=mainnet-beta&txn_signature=${txSignature}`,
+    `https://api.shyft.to/sol/v1/transaction/parsed?network=devnet&txn_signature=${txSignature}`,
     requestOptions
   );
   if (!response.ok) {
