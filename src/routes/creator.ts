@@ -18,7 +18,13 @@ import {
 } from "../services/solanaService";
 import { z } from "zod";
 import {
+  activateClickCrate,
+  activateProductListing,
+  generateBlinkUrl,
   initiateVerification,
+  placeProductListing,
+  registerClickCrate,
+  registerProductListing,
   verifyCode,
 } from "../services/clickcrateApiService";
 
@@ -185,11 +191,11 @@ router.post("/create-product", async (req, res) => {
       );
     }
 
-    console.log("Responding");
+    const paymentTx = Buffer.from(relayTx.serialize()).toString("base64");
+    console.log("Responding with this paymentTx: ", paymentTx);
 
     const responseBody: ActionPostResponse = {
-      transaction: Buffer.from(relayTx.serialize()).toString("base64"),
-      // transaction: relayTx.serialize().toString(),
+      transaction: paymentTx,
       message:
         "Products created. Please check your email for the verification code.",
       links: {
@@ -277,67 +283,50 @@ router.post("/verify-and-place", async (req, res) => {
     }
 
     // Register ClickCrate POS
-    const registerPosResponse = await axios.post(
-      `${CLICKCRATE_API_URL}/api/clickcrates/register`,
-      {
-        clickcrateId: pos,
-        eligiblePlacementType: "Twitter",
-        eligibleProductCategory: "Merch",
-        manager: account,
-      }
-    );
+    const registerPosResponse = await registerClickCrate({
+      clickcrateId: pos as string,
+      eligiblePlacementType: "Twitter",
+      eligibleProductCategory: "Merch",
+      manager: account as string,
+    });
     console.log("registerPosResponse response:", registerPosResponse);
 
     // Activate ClickCrate POS
-    const activatePosResponse = await axios.post(
-      `${CLICKCRATE_API_URL}/api/clickcrates/activate`,
-      {
-        clickcrateId: pos,
-      }
-    );
+    const activatePosResponse = await activateClickCrate(pos as string);
     console.log("activatePosResponse response:", activatePosResponse);
 
     // Register Product Listing
-    const registerListingResponse = await axios.post(
-      `${CLICKCRATE_API_URL}/api/product-listings/register`,
-      {
-        productListingId: listing,
-        origin: "ClickCrate",
-        eligiblePlacementType: "Twitter",
-        eligibleProductCategory: "Merch",
-        manager: account,
-        price: price,
-        orderManager: "clickcrate",
-      }
-    );
+    const registerListingResponse = await registerProductListing({
+      productListingId: listing as string,
+      origin: "ClickCrate",
+      eligiblePlacementType: "Twitter",
+      eligibleProductCategory: "Merch",
+      manager: account as string,
+      price: Number(price),
+      orderManager: "clickcrate",
+    });
     console.log("registerListingResponse response:", registerListingResponse);
 
     // Activate Product Listing
-    const activateListingResponse = await axios.post(
-      `${CLICKCRATE_API_URL}/api/product-listings/activate`,
-      {
-        productListingId: listing,
-      }
+    const activateListingResponse = await activateProductListing(
+      listing as string
     );
     console.log("activateListingResponse response:", activateListingResponse);
 
     // Place Product Listing in ClickCrate POS
-    const placeProductResponse = await axios.post(
-      `${CLICKCRATE_API_URL}/api/product-listings/place`,
-      {
-        productListingId: listing,
-        clickcrateId: pos,
-        price: price,
-      }
-    );
+    const placeProductResponse = await placeProductListing({
+      productListingId: listing as string,
+      clickcrateId: pos as string,
+      price: Number(price),
+    });
     console.log("placeProductResponse response:", placeProductResponse);
 
     const clickcrateId = pos;
-    const blinkUrl = `${CLICKCRATE_API_URL}/blink/${clickcrateId}`;
+    const blinkUrl = await generateBlinkUrl(clickcrateId as string);
 
     const responseBody: ActionPostResponse = {
       transaction: placeProductResponse.data.transaction,
-      message: `Your product is ready for sale!. Share this Blink URL on Twitter to start selling: ${blinkUrl}`,
+      message: `Your product is ready for sale! Share this Blink URL on Twitter to start selling: ${blinkUrl}`,
     };
     res.status(200).json(responseBody);
   } catch (error) {
