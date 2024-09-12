@@ -44,10 +44,8 @@ const router = express.Router();
 // };
 // router.use(blinkCorsMiddleware);
 
-const CLICKCRATE_API_URL = process.env.CLICKCRATE_API_URL;
-
 // Step 1: Choose product type and provide product info (GET)
-router.get("/", (req, res) => {
+router.get("/", (req, res, next) => {
   try {
     const responseBody: ActionGetResponse = {
       icon: "https://shdw-drive.genesysgo.net/CiJnYeRgNUptSKR4MmsAPn7Zhp6LSv91ncWTuNqDLo7T/horizontalmerchcreatoricon.png",
@@ -118,15 +116,12 @@ router.get("/", (req, res) => {
     res.status(200).json(responseBody);
   } catch (error) {
     console.error("Error in GET /:", error);
-    const errorResponse: ActionError = {
-      message: "Internal server error",
-    };
-    res.status(500).json(errorResponse);
+    next(error);
   }
 });
 
 // Step 2: Create NFTs and initiate verification (POST)
-router.post("/create-product", async (req, res) => {
+router.post("/create-product", async (req, res, next) => {
   try {
     console.log("Received data:", req.body);
     const publicKey = new PublicKey(req.body.account);
@@ -221,12 +216,6 @@ router.post("/create-product", async (req, res) => {
                       type: "text",
                       required: true,
                     },
-                    // {
-                    //   name: "email",
-                    //   label: "Email",
-                    //   type: "email",
-                    //   required: true,
-                    // },
                   ],
                 },
               ],
@@ -235,25 +224,17 @@ router.post("/create-product", async (req, res) => {
         },
       },
     };
+    console.log("Created paymentTx:", paymentTx);
+    console.log("Sending response:", responseBody);
     res.status(200).json(responseBody);
   } catch (error) {
     console.error("Error in POST /create-product:", error);
-    if (error instanceof z.ZodError) {
-      const errorResponse: ActionError = {
-        message: "Invalid input data",
-      };
-      res.status(400).json(errorResponse);
-    } else {
-      const errorResponse: ActionError = {
-        message: `${error}`,
-      };
-      res.status(500).json(errorResponse);
-    }
+    next(error);
   }
 });
 
 // Step 3: Verify email, register, activate, and place product (POST)
-router.post("/verify-and-place", async (req, res) => {
+router.post("/verify-and-place", async (req, res, next) => {
   try {
     const { code } = req.body;
     console.log("req.body is: ", req.body);
@@ -331,10 +312,7 @@ router.post("/verify-and-place", async (req, res) => {
     res.status(200).json(responseBody);
   } catch (error) {
     console.error("Error in POST /verify-and-place:", error);
-    const errorResponse: ActionError = {
-      message: "Internal server error",
-    };
-    res.status(500).json(errorResponse);
+    next(error);
   }
 });
 
