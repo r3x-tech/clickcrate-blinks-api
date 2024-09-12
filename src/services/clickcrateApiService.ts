@@ -63,3 +63,16 @@ export async function initiateVerification(email: string) {
     throw error;
   }
 }
+
+export async function verifyCode(email: string, code: string) {
+  try {
+    const response = await clickcrateAxios.post("/v1/verify-code", {
+      email,
+      code,
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Error verifying code:", error);
+    throw error;
+  }
+}

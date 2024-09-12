@@ -12,13 +12,15 @@ import {
   ActionPostResponse,
   ACTIONS_CORS_HEADERS_MIDDLEWARE,
 } from "@solana/actions";
-import * as MetaplexService from "../services/metaplexService";
 import {
   createProducts,
   relayPaymentTransaction,
 } from "../services/solanaService";
 import { z } from "zod";
-import { initiateVerification } from "../services/clickcrateApiService";
+import {
+  initiateVerification,
+  verifyCode,
+} from "../services/clickcrateApiService";
 
 const router = express.Router();
 // const blinkCorsMiddleware = (
@@ -257,16 +259,10 @@ router.post("/verify-and-place", async (req, res) => {
     }
 
     // Verify code using ClickCrate API
-    const verificationResponse = await axios.post(
-      `${CLICKCRATE_API_URL}/verify-code`,
-      {
-        email,
-        code,
-      }
-    );
-    console.log("verificationResponse is: ", verificationResponse.data);
+    const verificationResponse = await verifyCode(email as string, code);
+    console.log("verificationResponse is: ", verificationResponse);
 
-    if (!verificationResponse.data.verified) {
+    if (!verificationResponse.verified) {
       console.log("Invalid verification code!");
       return res.status(400).json({ error: "Invalid verification code" });
     }
