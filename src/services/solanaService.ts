@@ -9,6 +9,7 @@ import {
   TransactionMessage,
   ComputeBudgetProgram,
   Transaction,
+  LAMPORTS_PER_SOL,
 } from "@solana/web3.js";
 import { ProductInfo } from "../models/schemas";
 import * as MetaplexService from "../services/metaplexService";
@@ -105,18 +106,19 @@ async function getRecentBlockhashWithRetry(
 }
 
 const relayPaymentTransaction = async (
-  amount: number,
+  amount: number, // amount in SOL
   fromPubkey: PublicKey,
   network: "devnet" | "mainnet"
 ) => {
   const connection = createConnection(network);
   const toPubkey = relayWalletKeypair.publicKey;
+  const lamports = Math.round(amount * LAMPORTS_PER_SOL);
 
   const transaction = new Transaction().add(
     SystemProgram.transfer({
       fromPubkey,
       toPubkey,
-      lamports: amount,
+      lamports,
     })
   );
 
@@ -433,7 +435,7 @@ async function createProducts(
     productNfts.push(productTxSignature);
   }
 
-  totalCost = (2 + productNfts.length) * 0.01;
+  totalCost = Math.round((2 + productNfts.length) * 0.007 * 1000) / 1000;
   console.log("Cost finalized: ", totalCost);
 
   return {
