@@ -260,8 +260,10 @@ router.post("/verify-and-place", async (req, res) => {
         code,
       }
     );
+    console.log("verificationResponse is: ", verificationResponse.data);
 
     if (!verificationResponse.data.verified) {
+      console.log("Invalid verification code!");
       return res.status(400).json({ error: "Invalid verification code" });
     }
 
