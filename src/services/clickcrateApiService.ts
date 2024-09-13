@@ -29,10 +29,26 @@ export async function registerClickCrate(clickcrateData: {
   manager: string;
 }) {
   try {
+    // Validate clickcrateId is a valid PublicKey
+    try {
+      new PublicKey(clickcrateData.clickcrateId);
+    } catch (error) {
+      console.error("Invalid clickcrateId:", clickcrateData.clickcrateId);
+      return {
+        status: 400,
+        data: { message: "Invalid clickcrateId" },
+      };
+    }
+
+    console.log("Registering ClickCrate with data:", clickcrateData);
+
     const response = await clickcrateAxios.post(
       "/v1/clickcrate/register",
       clickcrateData
     );
+
+    console.log("ClickCrate registration response:", response.data);
+
     return {
       status: response.status,
       data: response.data,
@@ -40,6 +56,7 @@ export async function registerClickCrate(clickcrateData: {
   } catch (error) {
     console.error("Error registering ClickCrate:", error);
     if (axios.isAxiosError(error)) {
+      console.error("Axios error response:", error.response?.data);
       return {
         status: error.response?.status || 500,
         data: error.response?.data || { message: "Unknown error occurred" },
