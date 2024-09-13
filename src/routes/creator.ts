@@ -246,12 +246,20 @@ router.post("/verify-and-place", async (req, res, next) => {
     const { pos, listing, products, price, account, email } = req.query;
     console.log("req.query: ", req.query);
 
-    if (!email || !pos || !listing || !products || !price || !account) {
-      console.error("Missing required parameters!!! in verify-place");
+    if (
+      !code ||
+      !email ||
+      !pos ||
+      !listing ||
+      !products ||
+      !price ||
+      !account
+    ) {
+      console.error("Missing required parameters in verify-and-place!!!");
       const errorResponse: ActionError = {
         message: "Missing required parameters",
       };
-      return res.status(400).json(errorResponse);
+      throw Error("Missing required parameters");
     }
 
     const verificationResponse = await verifyCode(email as string, code);
@@ -261,26 +269,40 @@ router.post("/verify-and-place", async (req, res, next) => {
       verificationResponse.status !== 200 ||
       !verificationResponse.data.verified
     ) {
-      console.log("Invalid verification code!");
-      return res.status(400).json({ error: "Invalid verification code" });
+      console.error("Invalid verification code!");
+      throw Error("Invalid verification code");
     }
 
     const registerPosResponse = await registerClickCrate({
       clickcrateId: pos as string,
-      eligiblePlacementType: "Twitter",
-      eligibleProductCategory: "Merch",
+      eligiblePlacementType: "digitalreplica",
+      eligibleProductCategory: "clothing",
       manager: account as string,
     });
     console.log("registerPosResponse response:", registerPosResponse);
+    if (registerPosResponse.status !== 200) {
+      console.error(
+        "Failed to register ClickCrate: ",
+        registerPosResponse.data
+      );
+      throw Error("Failed to register ClickCrate");
+    }
 
     const activatePosResponse = await activateClickCrate(pos as string);
     console.log("activatePosResponse response:", activatePosResponse);
+    if (activatePosResponse.status !== 200) {
+      console.error(
+        "Failed to activate ClickCrate: ",
+        activatePosResponse.data
+      );
+      throw Error("Failed to activate ClickCrate");
+    }
 
     const registerListingResponse = await registerProductListing({
       productListingId: listing as string,
       origin: "ClickCrate",
-      eligiblePlacementType: "Twitter",
-      eligibleProductCategory: "Merch",
+      eligiblePlacementType: "digitalreplica",
+      eligibleProductCategory: "clothing",
       manager: account as string,
       price: Number(price),
       orderManager: "clickcrate",

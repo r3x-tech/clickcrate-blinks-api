@@ -1,5 +1,6 @@
 import axios from "axios";
 import { ProductInfo } from "../models/schemas";
+import { LAMPORTS_PER_SOL, PublicKey } from "@solana/web3.js";
 
 const CLICKCRATE_API_URL = process.env.CLICKCRATE_API_URL;
 const CLICKCRATE_API_KEY = process.env.CLICKCRATE_API_KEY;
@@ -127,10 +128,21 @@ export async function placeProductListing(placeProductData: {
   price: number;
 }) {
   try {
-    const response = await clickcrateAxios.post(
-      "/v1/product-listing/place",
-      placeProductData
+    const priceInLamports = Math.round(
+      placeProductData.price * LAMPORTS_PER_SOL
     );
+    const productListingId = new PublicKey(
+      placeProductData.productListingId
+    ).toBase58();
+    const clickcrateId = new PublicKey(
+      placeProductData.clickcrateId
+    ).toBase58();
+
+    const response = await clickcrateAxios.post("/v1/product-listing/place", {
+      productListingId,
+      clickcrateId,
+      price: priceInLamports,
+    });
     return {
       status: response.status,
       data: response.data,
