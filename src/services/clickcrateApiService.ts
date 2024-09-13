@@ -45,7 +45,10 @@ export async function registerClickCrate(clickcrateData: {
         data: error.response?.data || { message: "Unknown error occurred" },
       };
     }
-    throw error;
+    return {
+      status: 500,
+      data: { message: "An unexpected error occurred" },
+    };
   }
 }
 
@@ -66,7 +69,10 @@ export async function activateClickCrate(clickcrateId: string) {
         data: error.response?.data || { message: "Unknown error occurred" },
       };
     }
-    throw error;
+    return {
+      status: 500,
+      data: { message: "An unexpected error occurred" },
+    };
   }
 }
 
@@ -96,7 +102,10 @@ export async function registerProductListing(productListingData: {
         data: error.response?.data || { message: "Unknown error occurred" },
       };
     }
-    throw error;
+    return {
+      status: 500,
+      data: { message: "An unexpected error occurred" },
+    };
   }
 }
 
@@ -118,7 +127,10 @@ export async function activateProductListing(productListingId: string) {
         data: error.response?.data || { message: "Unknown error occurred" },
       };
     }
-    throw error;
+    return {
+      status: 500,
+      data: { message: "An unexpected error occurred" },
+    };
   }
 }
 
@@ -155,7 +167,10 @@ export async function placeProductListing(placeProductData: {
         data: error.response?.data || { message: "Unknown error occurred" },
       };
     }
-    throw error;
+    return {
+      status: 500,
+      data: { message: "An unexpected error occurred" },
+    };
   }
 }
 
@@ -176,7 +191,10 @@ export async function initiateVerification(email: string) {
         data: error.response?.data || { message: "Unknown error occurred" },
       };
     }
-    throw error;
+    return {
+      status: 500,
+      data: { message: "An unexpected error occurred" },
+    };
   }
 }
 
@@ -198,6 +216,9 @@ export async function verifyCode(email: string, code: string) {
         data: error.response?.data || { message: "Unknown error occurred" },
       };
     }
-    throw error;
+    return {
+      status: 500,
+      data: { message: "An unexpected error occurred" },
+    };
   }
 }
