@@ -265,10 +265,7 @@ router.post("/verify-and-place", async (req, res, next) => {
     const verificationResponse = await verifyCode(email as string, code);
     console.log("Code verification response:", verificationResponse);
 
-    if (
-      verificationResponse.status !== 200 ||
-      !verificationResponse.data.verified
-    ) {
+    if (verificationResponse.status !== 200) {
       console.error("Invalid verification code!");
       throw Error("Invalid verification code");
     }
