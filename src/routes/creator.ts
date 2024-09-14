@@ -200,14 +200,14 @@ router.post("/create-product", async (req, res, next) => {
           type: "inline",
           action: {
             type: "action",
-            icon: `${imageUri}`,
+            icon: `https://shdw-drive.genesysgo.net/CiJnYeRgNUptSKR4MmsAPn7Zhp6LSv91ncWTuNqDLo7T/horizontalmerchcreatoricon.png`,
             label: "Verify Email",
             title: "Enter Verification Code",
             description: `Please enter the 6-digit code sent to: ${email}`,
             links: {
               actions: [
                 {
-                  href: `/creator/verify-and-place?image=${imageUri}&pos=${posCollectionAddress}&listing=${listingCollectionAddress}&products=${productAddresses.join(
+                  href: `/creator/verify-and-place?pos=${posCollectionAddress}&listing=${listingCollectionAddress}&products=${productAddresses.join(
                     ","
                   )}&price=${unitPrice}&account=${account}&email=${email}`,
                   label: "Verify and Place Product",
@@ -324,11 +324,11 @@ router.post("/verify-and-place", async (req, res, next) => {
     const blinkUrl = await generateBlinkUrl(clickcrateId as string);
 
     const responseBody: CompletedAction = {
-      icon: `${image}`,
+      icon: `https://shdw-drive.genesysgo.net/CiJnYeRgNUptSKR4MmsAPn7Zhp6LSv91ncWTuNqDLo7T/horizontalmerchcreatoricon.png`,
       label: "Created!",
       type: "completed",
       title: "ClickCrate Merch Creator",
-      description: `Your product is ready for sale! Share this Blink URL on Twitter to start selling: ${blinkUrl}`,
+      description: `Your product is ready for sale! Share this Blink URL to start selling: ${blinkUrl}`,
     };
     res.status(200).json(responseBody);
   } catch (error) {
