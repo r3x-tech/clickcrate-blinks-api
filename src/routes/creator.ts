@@ -11,6 +11,7 @@ import {
   ActionGetResponse,
   ActionPostResponse,
   ACTIONS_CORS_HEADERS_MIDDLEWARE,
+  CompletedAction,
 } from "@solana/actions";
 import {
   createProducts,
@@ -321,9 +322,12 @@ router.post("/verify-and-place", async (req, res, next) => {
     const clickcrateId = pos;
     const blinkUrl = await generateBlinkUrl(clickcrateId as string);
 
-    const responseBody: ActionPostResponse = {
-      transaction: placeProductResponse.data.transaction,
-      message: `Your product is ready for sale! Share this Blink URL on Twitter to start selling: ${blinkUrl}`,
+    const responseBody: CompletedAction = {
+      icon: "https://shdw-drive.genesysgo.net/CiJnYeRgNUptSKR4MmsAPn7Zhp6LSv91ncWTuNqDLo7T/horizontalmerchcreatoricon.png",
+      label: "Created!",
+      type: "completed",
+      title: "ClickCrate Merch Creator",
+      description: `Your product is ready for sale! Share this Blink URL on Twitter to start selling: ${blinkUrl}`,
     };
     res.status(200).json(responseBody);
   } catch (error) {
