@@ -207,7 +207,7 @@ router.post("/create-product", async (req, res, next) => {
             links: {
               actions: [
                 {
-                  href: `/creator/verify-and-place?pos=${posCollectionAddress}&listing=${listingCollectionAddress}&products=${productAddresses.join(
+                  href: `/creator/verify-and-place?image=${imageUri}&pos=${posCollectionAddress}&listing=${listingCollectionAddress}&products=${productAddresses.join(
                     ","
                   )}&price=${unitPrice}&account=${account}&email=${email}`,
                   label: "Verify and Place Product",
@@ -244,10 +244,11 @@ router.post("/verify-and-place", async (req, res, next) => {
     // const { code } = req.body;
     // console.log("req.body is: ", req.body);
 
-    const { pos, listing, products, price, account, email } = req.query;
+    const { image, pos, listing, products, price, account, email } = req.query;
     console.log("req.query: ", req.query);
 
     if (
+      !image ||
       !code ||
       !email ||
       !pos ||
@@ -323,7 +324,7 @@ router.post("/verify-and-place", async (req, res, next) => {
     const blinkUrl = await generateBlinkUrl(clickcrateId as string);
 
     const responseBody: CompletedAction = {
-      icon: "https://shdw-drive.genesysgo.net/CiJnYeRgNUptSKR4MmsAPn7Zhp6LSv91ncWTuNqDLo7T/horizontalmerchcreatoricon.png",
+      icon: `${image}`,
       label: "Created!",
       type: "completed",
       title: "ClickCrate Merch Creator",
