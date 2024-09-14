@@ -244,11 +244,10 @@ router.post("/verify-and-place", async (req, res, next) => {
     // const { code } = req.body;
     // console.log("req.body is: ", req.body);
 
-    const { image, pos, listing, products, price, account, email } = req.query;
+    const { pos, listing, products, price, account, email } = req.query;
     console.log("req.query: ", req.query);
 
     if (
-      !image ||
       !code ||
       !email ||
       !pos ||
