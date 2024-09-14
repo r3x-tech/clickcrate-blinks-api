@@ -200,7 +200,7 @@ router.post("/create-product", async (req, res, next) => {
           type: "inline",
           action: {
             type: "action",
-            icon: "https://shdw-drive.genesysgo.net/CiJnYeRgNUptSKR4MmsAPn7Zhp6LSv91ncWTuNqDLo7T/horizontalmerchcreatoricon.png",
+            icon: `${imageUri}`,
             label: "Verify Email",
             title: "Enter Verification Code",
             description: `Please enter the 6-digit code sent to: ${email}`,
