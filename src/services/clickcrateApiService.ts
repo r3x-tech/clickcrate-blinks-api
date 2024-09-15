@@ -103,10 +103,14 @@ export async function registerProductListing(productListingData: {
   orderManager: string;
 }) {
   try {
+    console.log("Registering product listing with data:", productListingData);
+
     const response = await clickcrateAxios.post(
       "/v1/product-listing/register",
       productListingData
     );
+    console.log("Product listing registration response:", response.data);
+
     return {
       status: response.status,
       data: response.data,
