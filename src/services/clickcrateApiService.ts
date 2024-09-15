@@ -105,6 +105,10 @@ export async function registerProductListing(productListingData: {
   try {
     console.log("Registering product listing with data:", productListingData);
 
+    if (!Number.isInteger(productListingData.price)) {
+      throw new Error("Price must be an integer (in lamports)");
+    }
+
     const response = await clickcrateAxios.post(
       "/v1/product-listing/register",
       productListingData

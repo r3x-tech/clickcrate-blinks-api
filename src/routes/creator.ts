@@ -1,6 +1,6 @@
 import express from "express";
 import axios from "axios";
-import { PublicKey } from "@solana/web3.js";
+import { LAMPORTS_PER_SOL, PublicKey } from "@solana/web3.js";
 import {
   ProductInfoSchema,
   ProductTypeSchema,
@@ -302,7 +302,7 @@ router.post("/verify-and-place", async (req, res, next) => {
       eligiblePlacementType: "digitalreplica",
       eligibleProductCategory: "clothing",
       manager: account as string,
-      price: Number(price),
+      price: Math.round(Number(price) * LAMPORTS_PER_SOL),
       orderManager: "clickcrate",
     });
     console.log("registerListingResponse response:", registerListingResponse);

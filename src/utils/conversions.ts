@@ -6,6 +6,7 @@ import {
   PublicKey,
   TransactionInstruction,
   Transaction as SolanaTransaction,
+  LAMPORTS_PER_SOL,
 } from "@solana/web3.js";
 
 export const getOriginFromString = (origin: string): any => {
@@ -73,4 +74,16 @@ export function convertMetaplexInstructionToTransactionInstruction(
     programId: new PublicKey(metaplexInstruction.programId),
     data: Buffer.from(metaplexInstruction.data),
   });
+}
+
+export function solToLamports(sol: number): number {
+  return Math.round(sol * LAMPORTS_PER_SOL);
+}
+
+export function lamportsToSol(lamports: number): number {
+  return lamports / LAMPORTS_PER_SOL;
+}
+
+export function formatSolPrice(lamports: number): string {
+  return lamportsToSol(lamports).toFixed(9) + " SOL";
 }
