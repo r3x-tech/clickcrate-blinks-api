@@ -306,11 +306,25 @@ router.post("/verify-and-place", async (req, res, next) => {
       orderManager: "clickcrate",
     });
     console.log("registerListingResponse response:", registerListingResponse);
+    if (registerListingResponse.status !== 200) {
+      console.error(
+        "Failed to register listing: ",
+        registerListingResponse.data
+      );
+      throw Error("Failed to register listing");
+    }
 
     const activateListingResponse = await activateProductListing(
       listing as string
     );
     console.log("activateListingResponse response:", activateListingResponse);
+    if (activateListingResponse.status !== 200) {
+      console.error(
+        "Failed to activate listing: ",
+        activateListingResponse.data
+      );
+      throw Error("Failed to activate listing");
+    }
 
     const placeProductResponse = await placeProductListing({
       productListingId: listing as string,
@@ -318,6 +332,10 @@ router.post("/verify-and-place", async (req, res, next) => {
       price: Number(price),
     });
     console.log("placeProductResponse response:", placeProductResponse);
+    if (placeProductResponse.status !== 200) {
+      console.error("Failed to place products: ", placeProductResponse.data);
+      throw Error("Failed to place products");
+    }
 
     const clickcrateId = pos;
     const blinkUrl = await generateBlinkUrl(clickcrateId as string);
