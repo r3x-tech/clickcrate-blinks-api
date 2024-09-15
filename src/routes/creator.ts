@@ -298,7 +298,7 @@ router.post("/verify-and-place", async (req, res, next) => {
 
     const registerListingResponse = await registerProductListing({
       productListingId: listing as string,
-      origin: "ClickCrate",
+      origin: "clickcrate",
       eligiblePlacementType: "digitalreplica",
       eligibleProductCategory: "clothing",
       manager: account as string,
