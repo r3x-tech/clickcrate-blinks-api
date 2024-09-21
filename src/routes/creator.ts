@@ -12,6 +12,7 @@ import {
   ActionPostResponse,
   ACTIONS_CORS_HEADERS_MIDDLEWARE,
   CompletedAction,
+  createActionHeaders,
 } from "@solana/actions";
 import {
   createProducts,
@@ -44,6 +45,8 @@ const router = express.Router();
 //   next();
 // };
 // router.use(blinkCorsMiddleware);
+
+const headers = createActionHeaders();
 
 // Step 1: Choose product type and provide product info (GET)
 router.get("/", (req, res, next) => {
@@ -342,17 +345,14 @@ router.post("/verify-and-place", async (req, res, next) => {
     const blinkUrl = await generateBlinkUrl(clickcrateId);
     console.log("blinkUrl response:", blinkUrl);
 
-    const responseAction: CompletedAction = {
+    const payload: CompletedAction = {
+      type: "completed",
       icon: `https://shdw-drive.genesysgo.net/CiJnYeRgNUptSKR4MmsAPn7Zhp6LSv91ncWTuNqDLo7T/horizontalmerchcreatoricon.png`,
       label: "Created!",
       title: "ClickCrate Merch Creator",
-      description: `Your product is ready for sale! Share this Blink URL to start selling: ${blinkUrl}`,
-      type: "completed",
+      description: `Your product is ready for sale! Share this Blink URL to start selling: https://shdw-drive.genesysgo.net/CiJnYeRgNUptSKR4MmsAPn7Zhp6LSv91ncWTuNqDLo7T/horizontalmerchcreatoricon.png`,
     };
-    res.status(200).json({
-      type: "inline",
-      action: responseAction,
-    });
+    res.status(200).json(payload).set(headers);
   } catch (error) {
     console.error("Error in POST /verify-and-place:", error);
     next(error);
