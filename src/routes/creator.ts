@@ -299,7 +299,7 @@ router.post("/verify-and-place", async (req, res, next) => {
     const registerListingResponse = await registerProductListing({
       productListingId: listing as string,
       origin: "clickcrate",
-      eligiblePlacementType: "relatedplacement",
+      eligiblePlacementType: "relatedpurchase",
       eligibleProductCategory: "clothing",
       manager: account as string,
       price: Math.round(Number(price) * LAMPORTS_PER_SOL),
