@@ -342,14 +342,17 @@ router.post("/verify-and-place", async (req, res, next) => {
     const blinkUrl = await generateBlinkUrl(clickcrateId);
     console.log("blinkUrl response:", blinkUrl);
 
-    const responseBody: CompletedAction = {
+    const responseAction: CompletedAction = {
       icon: `https://shdw-drive.genesysgo.net/CiJnYeRgNUptSKR4MmsAPn7Zhp6LSv91ncWTuNqDLo7T/horizontalmerchcreatoricon.png`,
       label: "Created!",
-      type: "completed",
       title: "ClickCrate Merch Creator",
       description: `Your product is ready for sale! Share this Blink URL to start selling: ${blinkUrl}`,
+      type: "completed",
     };
-    res.status(200).json(responseBody);
+    res.status(200).json({
+      type: "inline",
+      action: responseAction,
+    });
   } catch (error) {
     console.error("Error in POST /verify-and-place:", error);
     next(error);
