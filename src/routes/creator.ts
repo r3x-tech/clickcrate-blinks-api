@@ -340,7 +340,7 @@ router.post("/verify-and-place", async (req, res, next) => {
     const clickcrateId = pos as string;
     console.log("clickcrateId is:", clickcrateId);
     const blinkUrl = await generateBlinkUrl(clickcrateId);
-    console.log("blinkUrl response:", placeProductResponse);
+    console.log("blinkUrl response:", blinkUrl);
 
     const responseBody: CompletedAction = {
       icon: `https://shdw-drive.genesysgo.net/CiJnYeRgNUptSKR4MmsAPn7Zhp6LSv91ncWTuNqDLo7T/horizontalmerchcreatoricon.png`,
