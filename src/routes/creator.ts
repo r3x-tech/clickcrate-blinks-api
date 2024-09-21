@@ -337,8 +337,10 @@ router.post("/verify-and-place", async (req, res, next) => {
       throw Error("Failed to place products");
     }
 
-    const clickcrateId = pos;
-    const blinkUrl = await generateBlinkUrl(clickcrateId as string);
+    const clickcrateId = pos as string;
+    console.log("clickcrateId is:", clickcrateId);
+    const blinkUrl = await generateBlinkUrl(clickcrateId);
+    console.log("blinkUrl response:", placeProductResponse);
 
     const responseBody: CompletedAction = {
       icon: `https://shdw-drive.genesysgo.net/CiJnYeRgNUptSKR4MmsAPn7Zhp6LSv91ncWTuNqDLo7T/horizontalmerchcreatoricon.png`,
