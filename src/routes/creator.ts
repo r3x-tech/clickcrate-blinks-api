@@ -345,6 +345,21 @@ router.post("/verify-and-place", async (req, res, next) => {
     const blinkUrl = await generateBlinkUrl(clickcrateId);
     console.log("blinkUrl response:", blinkUrl);
 
+    const completedAction: CompletedAction = {
+      type: "completed",
+      icon: `https://shdw-drive.genesysgo.net/CiJnYeRgNUptSKR4MmsAPn7Zhp6LSv91ncWTuNqDLo7T/horizontalmerchcreatoricon.png`,
+      label: "Created!",
+      title: "ClickCrate Merch Creator",
+      description: `Your product is ready for sale! Share this Blink URL to start selling: ${blinkUrl}`,
+    };
+
+    const payload = {
+      action: completedAction,
+    };
+
+    const headers = createActionHeaders();
+    console.log("Sending response:", JSON.stringify(payload, null, 2));
+
     // const payload: ActionPostResponse = {
     //   transaction: "", // Empty transaction
     //   message: "Product creation completed successfully!",
@@ -364,18 +379,18 @@ router.post("/verify-and-place", async (req, res, next) => {
     // console.log("Sending response:", JSON.stringify(payload, null, 2));
     // res.set(headers).status(200).json(payload);
 
-    const payload: CompletedAction = {
-      type: "completed",
-      icon: `https://shdw-drive.genesysgo.net/CiJnYeRgNUptSKR4MmsAPn7Zhp6LSv91ncWTuNqDLo7T/horizontalmerchcreatoricon.png`,
-      label: "Created!",
-      title: "ClickCrate Merch Creator",
-      description: `Your product is ready for sale! Share this Blink URL to start selling: ${blinkUrl}`,
-    };
+    // const payload: CompletedAction = {
+    //   type: "completed",
+    //   icon: `https://shdw-drive.genesysgo.net/CiJnYeRgNUptSKR4MmsAPn7Zhp6LSv91ncWTuNqDLo7T/horizontalmerchcreatoricon.png`,
+    //   label: "Created!",
+    //   title: "ClickCrate Merch Creator",
+    //   description: `Your product is ready for sale! Share this Blink URL to start selling: ${blinkUrl}`,
+    // };
 
-    // const headers = createActionHeaders();
-    console.log("Sending response:", JSON.stringify(payload, null, 2));
-    // res.set(headers).status(200).json(payload);
-    res.status(200).json(payload);
+    // // const headers = createActionHeaders();
+    // console.log("Sending response:", JSON.stringify(payload, null, 2));
+    res.set(headers).status(200).json(payload);
+    // res.status(200).json(payload);
   } catch (error) {
     console.error("Error in POST /verify-and-place:", error);
     next(error);
