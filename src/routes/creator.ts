@@ -272,6 +272,8 @@ router.post("/verify-and-place", async (req, res, next) => {
       throw Error("Missing required parameters");
     }
 
+    const publicKey = new PublicKey(account);
+
     const verificationResponse = await verifyCode(email as string, code);
     console.log("Code verification response:", verificationResponse);
 
@@ -351,13 +353,19 @@ router.post("/verify-and-place", async (req, res, next) => {
     const blinkUrl = await generateBlinkUrl(clickcrateId);
     console.log("blinkUrl response:", blinkUrl);
 
-    const completedAction: CompletedAction = {
-      type: "completed",
-      icon: `https://shdw-drive.genesysgo.net/CiJnYeRgNUptSKR4MmsAPn7Zhp6LSv91ncWTuNqDLo7T/horizontalmerchcreatoricon.png`,
-      label: "Created!",
-      title: "ClickCrate Merch Creator",
-      description: `Your product is ready for sale! Share this Blink URL to start selling: ${blinkUrl}`,
-    };
+    const relayTx = await relayPaymentTransaction(0.001, publicKey, "mainnet");
+    console.log("Initiating verification");
+
+    const paymentTx = Buffer.from(relayTx.serialize()).toString("base64");
+    console.log("Responding with this paymentTx: ", paymentTx);
+
+    // const completedAction: CompletedAction = {
+    //   type: "completed",
+    //   icon: `https://shdw-drive.genesysgo.net/CiJnYeRgNUptSKR4MmsAPn7Zhp6LSv91ncWTuNqDLo7T/horizontalmerchcreatoricon.png`,
+    //   label: "Created!",
+    //   title: "ClickCrate Merch Creator",
+    //   description: `Your product is ready for sale! Share this Blink URL to start selling: ${blinkUrl}`,
+    // };
 
     // const payload = {
     //   action: completedAction,
@@ -368,7 +376,7 @@ router.post("/verify-and-place", async (req, res, next) => {
     // res.set(headers).status(200).json(payload);
 
     const payload = {
-      transaction: "",
+      transaction: paymentTx,
       message: "Product creation completed successfully!",
       links: {
         next: {
