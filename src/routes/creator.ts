@@ -223,6 +223,10 @@ router.post("/create-product", async (req, res, next) => {
                     },
                   ],
                 },
+                {
+                  href: `/creator/resend-verification?email=${email}`,
+                  label: "Resend Verification Code",
+                },
               ],
             },
           },
@@ -394,6 +398,78 @@ router.post("/verify-and-place", async (req, res, next) => {
     // res.status(200).json(payload);
   } catch (error) {
     console.error("Error in POST /verify-and-place:", error);
+    next(error);
+  }
+});
+
+router.post("/resend-verification", async (req, res, next) => {
+  console.log("Received data:", req.body);
+  const publicKey = new PublicKey(req.body.account);
+
+  try {
+    const { email } = req.query;
+
+    if (!email) {
+      throw new Error("Email is required");
+    }
+
+    const verificationResponse = await initiateVerification(email as string);
+    console.log("Verification re-initiation response:", verificationResponse);
+
+    if (verificationResponse.status !== 200) {
+      throw Error(
+        `Verification failed. Status: ${
+          verificationResponse.status
+        }, Message: ${JSON.stringify(verificationResponse.data)}`
+      );
+    }
+
+    const relayTx = await relayPaymentTransaction(0.001, publicKey, "mainnet");
+    console.log("Initiating verification");
+
+    const paymentTx = Buffer.from(relayTx.serialize()).toString("base64");
+    console.log("Responding with this paymentTx: ", paymentTx);
+
+    const responseBody: ActionPostResponse = {
+      transaction: paymentTx,
+      message: "Verification code resent. Please check your email.",
+      links: {
+        next: {
+          type: "inline",
+          action: {
+            type: "action",
+            icon: `https://shdw-drive.genesysgo.net/CiJnYeRgNUptSKR4MmsAPn7Zhp6LSv91ncWTuNqDLo7T/horizontalmerchcreatoricon.png`,
+            label: "Verify Email",
+            title: "Enter Verification Code",
+            description: `Please enter the 6-digit code sent to: ${email}`,
+            links: {
+              actions: [
+                {
+                  href: `/creator/verify-and-place?email=${email}`,
+                  label: "Verify and Place Product",
+                  parameters: [
+                    {
+                      name: "code",
+                      label: "6-digit Verification Code",
+                      type: "text",
+                      required: true,
+                    },
+                  ],
+                },
+                {
+                  href: `/creator/resend-verification?email=${email}`,
+                  label: "Resend Verification Code",
+                },
+              ],
+            },
+          },
+        },
+      },
+    };
+
+    res.status(200).json(responseBody);
+  } catch (error) {
+    console.error("Error in POST /resend-verification:", error);
     next(error);
   }
 });
