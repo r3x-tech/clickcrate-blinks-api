@@ -224,7 +224,9 @@ router.post("/create-product", async (req, res, next) => {
                   ],
                 },
                 {
-                  href: `/creator/resend-verification?email=${email}`,
+                  href: `/creator/resend-verification?pos=${posCollectionAddress}&listing=${listingCollectionAddress}&products=${productAddresses.join(
+                    ","
+                  )}&price=${unitPrice}&account=${account}&email=${email}`,
                   label: "Resend Verification Code",
                 },
               ],
@@ -407,10 +409,10 @@ router.post("/resend-verification", async (req, res, next) => {
   const publicKey = new PublicKey(req.body.account);
 
   try {
-    const { email } = req.query;
+    const { pos, listing, products, price, account, email } = req.query;
 
-    if (!email) {
-      throw new Error("Email is required");
+    if (!email || !pos || !listing || !products || !price || !account) {
+      throw new Error("Missing required parameters");
     }
 
     const verificationResponse = await initiateVerification(email as string);
@@ -445,7 +447,7 @@ router.post("/resend-verification", async (req, res, next) => {
             links: {
               actions: [
                 {
-                  href: `/creator/verify-and-place?email=${email}`,
+                  href: `/creator/verify-and-place?pos=${pos}&listing=${listing}&products=${products}&price=${price}&account=${account}&email=${email}`,
                   label: "Verify and Place Product",
                   parameters: [
                     {
@@ -457,7 +459,7 @@ router.post("/resend-verification", async (req, res, next) => {
                   ],
                 },
                 {
-                  href: `/creator/resend-verification?email=${email}`,
+                  href: `/creator/resend-verification?pos=${pos}&listing=${listing}&products=${products}&price=${price}&account=${account}&email=${email}`,
                   label: "Resend Verification Code",
                 },
               ],
