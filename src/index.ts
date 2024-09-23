@@ -4,7 +4,7 @@ dotenv.config();
 import express, { Express, Request, Response, NextFunction } from "express";
 import cors from "cors";
 import productCreatorRoutes from "./routes/creator";
-import merchRoutes from "./routes/creator";
+import merchRoutes from "./routes/merch";
 import shippingInfoRoutes from "./routes/shipping";
 import { errorHandler } from "./middleware/errorHandler";
 import { ACTIONS_CORS_HEADERS_MIDDLEWARE } from "@solana/actions";
