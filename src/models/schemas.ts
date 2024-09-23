@@ -1,5 +1,10 @@
 import { z } from "zod";
 
+export type Attribute = {
+  trait_type: string;
+  value: string;
+};
+
 export const ProductTypeSchema = z.enum([
   // "Heavyweight Premium T-Shirt (Screen Print)",
   // "Premium Pullover Hoodie (Screen Print)",

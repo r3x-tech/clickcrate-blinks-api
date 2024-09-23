@@ -8,6 +8,7 @@ import {
   Transaction as SolanaTransaction,
   LAMPORTS_PER_SOL,
 } from "@solana/web3.js";
+import { Attribute } from "../models/schemas";
 
 export const getOriginFromString = (origin: string): any => {
   switch (origin) {
@@ -86,4 +87,23 @@ export function lamportsToSol(lamports: number): number {
 
 export function formatSolPrice(lamports: number): string {
   return lamportsToSol(lamports).toFixed(9) + " SOL";
+}
+
+export function isAttribute(obj: any): obj is Attribute {
+  return (
+    obj && typeof obj.trait_type === "string" && typeof obj.value === "string"
+  );
+}
+
+export function parseSizes(
+  sizeString: string
+): { label: string; value: string }[] {
+  // Remove any text in parentheses and trim whitespace
+  const cleanedSizeString = sizeString.replace(/\([^)]*\)/g, "").trim();
+
+  // Split the string by commas and trim each size
+  const sizes = cleanedSizeString.split(",").map((size) => size.trim());
+
+  // Create an array of objects with label and value properties
+  return sizes.map((size) => ({ label: size, value: size }));
 }

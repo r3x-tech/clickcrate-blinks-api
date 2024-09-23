@@ -22,6 +22,38 @@ export async function generateBlinkUrl(posId: string) {
   }
 }
 
+export async function fetchRegisteredClickcrate(clickcrateId: string) {
+  try {
+    try {
+      new PublicKey(clickcrateId);
+    } catch (error) {
+      console.error("Invalid clickcrateId:", clickcrateId);
+      return {
+        status: 400,
+        data: { error: "Invalid clickcrateId" },
+      };
+    }
+
+    const response = await clickcrateAxios.post("/v1/clickcrate/registered", {
+      clickcrateId,
+    });
+
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching registered ClickCrate:", error);
+    if (axios.isAxiosError(error)) {
+      return {
+        status: error.response?.status || 500,
+        data: error.response?.data || { error: "Unknown error occurred" },
+      };
+    }
+    return {
+      status: 500,
+      data: { error: "An unexpected error occurred" },
+    };
+  }
+}
+
 export async function registerClickCrate(clickcrateData: {
   clickcrateId: string;
   eligiblePlacementType: string;
@@ -89,6 +121,41 @@ export async function activateClickCrate(clickcrateId: string) {
     return {
       status: 500,
       data: { message: "An unexpected error occurred" },
+    };
+  }
+}
+
+export async function fetchRegisteredProductListing(productListingId: string) {
+  try {
+    try {
+      new PublicKey(productListingId);
+    } catch (error) {
+      console.error("Invalid productListingId:", productListingId);
+      return {
+        status: 400,
+        data: { error: "Invalid productListingId" },
+      };
+    }
+
+    const response = await clickcrateAxios.post(
+      "/v1/product-listing/registered",
+      {
+        productListingId,
+      }
+    );
+
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching registered Product Listing:", error);
+    if (axios.isAxiosError(error)) {
+      return {
+        status: error.response?.status || 500,
+        data: error.response?.data || { error: "Unknown error occurred" },
+      };
+    }
+    return {
+      status: 500,
+      data: { error: "An unexpected error occurred" },
     };
   }
 }
