@@ -31,22 +31,22 @@ import {
 } from "../services/clickcrateApiService";
 
 const router = express.Router();
-// const blinkCorsMiddleware = (
-//   req: express.Request,
-//   res: express.Response,
-//   next: express.NextFunction
-// ) => {
-//   res.set(ACTIONS_CORS_HEADERS_MIDDLEWARE);
-//   if (req.method === "OPTIONS") {
-//     return res.status(200).json({
-//       body: "OK",
-//     });
-//   }
-//   next();
-// };
-// router.use(blinkCorsMiddleware);
+const blinkCorsMiddleware = (
+  req: express.Request,
+  res: express.Response,
+  next: express.NextFunction
+) => {
+  res.set(ACTIONS_CORS_HEADERS_MIDDLEWARE);
+  if (req.method === "OPTIONS") {
+    return res.status(200).json({
+      body: "OK",
+    });
+  }
+  next();
+};
+router.use(blinkCorsMiddleware);
 
-const headers = createActionHeaders();
+// const headers = createActionHeaders();
 
 // Step 1: Choose product type and provide product info (GET)
 router.get("/", (req, res, next) => {
@@ -392,7 +392,8 @@ router.post("/verify-and-place", async (req, res, next) => {
       },
     };
     console.log("Sending response:", JSON.stringify(payload, null, 2));
-    res.set(headers).status(200).json(payload);
+    // res.set(headers).status(200).json(payload);
+    res.status(200).json(payload);
 
     // const payload: CompletedAction = {
     //   type: "completed",

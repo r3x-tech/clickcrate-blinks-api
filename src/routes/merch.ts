@@ -1,7 +1,10 @@
 import express from "express";
 import { LAMPORTS_PER_SOL, PublicKey } from "@solana/web3.js";
 import { Attribute } from "../models/schemas";
-import { ActionGetResponse } from "@solana/actions";
+import {
+  ActionGetResponse,
+  ACTIONS_CORS_HEADERS_MIDDLEWARE,
+} from "@solana/actions";
 import {
   fetchRegisteredProductListing,
   fetchRegisteredClickcrate,
@@ -11,6 +14,21 @@ import { isAttribute, parseSizes } from "../utils/conversions";
 import { relayPaymentTransaction } from "../services/solanaService";
 
 const router = express.Router();
+
+const blinkCorsMiddleware = (
+  req: express.Request,
+  res: express.Response,
+  next: express.NextFunction
+) => {
+  res.set(ACTIONS_CORS_HEADERS_MIDDLEWARE);
+  if (req.method === "OPTIONS") {
+    return res.status(200).json({
+      body: "OK",
+    });
+  }
+  next();
+};
+router.use(blinkCorsMiddleware);
 
 router.get(
   "/:clickcrateId",
@@ -157,7 +175,6 @@ router.get(
 router.post("/purchase", async (req, res, next) => {
   try {
     console.log("req.body is: ", req.body);
-    const publicKey = new PublicKey(req.body.account);
 
     const {
       account,
@@ -169,6 +186,8 @@ router.post("/purchase", async (req, res, next) => {
       shippingCountryRegion,
       shippingZipCode,
     } = req.body;
+    const publicKey = new PublicKey(account);
+
     const {
       clickcrateId,
       productName,
