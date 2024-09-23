@@ -38,7 +38,10 @@ export async function fetchRegisteredClickcrate(clickcrateId: string) {
       clickcrateId,
     });
 
-    return response.data;
+    return {
+      status: response.status,
+      data: response.data,
+    };
   } catch (error) {
     console.error("Error fetching registered ClickCrate:", error);
     if (axios.isAxiosError(error)) {
@@ -144,7 +147,10 @@ export async function fetchRegisteredProductListing(productListingId: string) {
       }
     );
 
-    return response.data;
+    return {
+      status: response.status,
+      data: response.data,
+    };
   } catch (error) {
     console.error("Error fetching registered Product Listing:", error);
     if (axios.isAxiosError(error)) {

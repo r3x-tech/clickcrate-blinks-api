@@ -21,8 +21,14 @@ router.get(
         return res.status(400).json({ message: "ClickCrate not found" });
       }
 
-      const clickcrateAsset = await fetchRegisteredClickcrate(clickcrateId);
+      const clickcrateAssetResponse = await fetchRegisteredClickcrate(
+        clickcrateId
+      );
+      console.log("fetched ClickCrate response: ", clickcrateAssetResponse);
+
+      const clickcrateAsset = clickcrateAssetResponse.data;
       console.log("fetched ClickCrate: ", clickcrateAsset);
+
       if (!clickcrateAsset.product) {
         return res
           .status(404)
@@ -35,9 +41,12 @@ router.get(
       );
       console.log("fetched productListingAsset: ", productListingAsset);
 
-      const productListing = await fetchRegisteredProductListing(
+      const productListingResponse = await fetchRegisteredProductListing(
         clickcrateAsset.product
       );
+      console.log("fetched productListing response: ", productListingResponse);
+
+      const productListing = productListingResponse.data;
       console.log("fetched productListing: ", productListing);
 
       if (!productListingAsset || !productListing) {
