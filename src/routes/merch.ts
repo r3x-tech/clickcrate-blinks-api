@@ -82,7 +82,7 @@ router.get(
         links: {
           actions: [
             {
-              href: `/purchase?clickcrateId=${clickcrateId}size={size}&buyerName={buyerName}&shippingEmail={shippingEmail}&shippingAddress={shippingAddress}&shippingCity={shippingCity}&shippingStateProvince={shippingStateProvince}&shippingCountryRegion={shippingCountryRegion}&shippingZipCode={shippingZipCode}`,
+              href: `/purchase?clickcrateId=${clickcrateId}&productName=${productListingAsset.content.metadata.name}&productSizes=${productSizeAttr?.value}&productIcon=${icon}&productDescription=${productListingAsset.content.metadata.description}`,
               label: `${buttonText}`,
               parameters: [
                 {
@@ -149,8 +149,9 @@ router.post("/purchase", async (req, res, next) => {
   try {
     console.log("req.body is: ", req.body);
     const publicKey = new PublicKey(req.body.account);
+
     const {
-      clickcrateId,
+      account,
       size,
       buyerName,
       shippingEmail,
@@ -158,6 +159,13 @@ router.post("/purchase", async (req, res, next) => {
       shippingStateProvince,
       shippingCountryRegion,
       shippingZipCode,
+    } = req.body;
+    const {
+      clickcrateId,
+      productName,
+      productSizes,
+      productDescription,
+      productIcon,
     } = req.query;
     console.log("req.query: ", req.query);
 
@@ -183,16 +191,16 @@ router.post("/purchase", async (req, res, next) => {
 
     const payload = {
       transaction: paymentTx,
-      message: "Product creation completed successfully!",
+      message: `Purchase successful! Order confirmation emailed to: ${shippingEmail}`,
       links: {
         next: {
           type: "inline",
           action: {
             type: "completed",
-            icon: `https://shdw-drive.genesysgo.net/CiJnYeRgNUptSKR4MmsAPn7Zhp6LSv91ncWTuNqDLo7T/horizontalmerchcreatoricon.png`,
-            label: "Created!",
-            title: "ClickCrate Merch Creator",
-            description: `Purchase successful! Order confirmation emailed to: ${shippingEmail}`,
+            icon: `${productIcon}`,
+            label: "Purchased successful!",
+            title: `${productName}`,
+            description: `${productDescription}`,
           },
         },
       },
