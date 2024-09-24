@@ -92,9 +92,11 @@ router.get(
       const disable = inStock < 1 || isNaN(inStock);
       console.log("blink disabled? ", disable);
 
+      const salePrice = productListing.price / LAMPORTS_PER_SOL;
+
       const buttonText = disable
         ? "SOLD OUT"
-        : `Buy for ${productListing.price / LAMPORTS_PER_SOL} SOL`;
+        : `Buy for ${productListing.price} SOL`;
       console.log("buttonText: ", buttonText);
 
       const responseBody: ActionGetResponse = {
