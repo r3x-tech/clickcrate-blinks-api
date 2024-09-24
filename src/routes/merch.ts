@@ -83,10 +83,16 @@ router.get(
         );
 
       let productSizes: { label: string; value: string }[] = [];
-      if (productSizeAttr && productSizeAttr.value.includes(",")) {
-        productSizes = parseSizes(productSizeAttr.value);
-      }
 
+      if (productSizeAttr && productSizeAttr.value) {
+        if (productSizeAttr.value.includes(",")) {
+          productSizes = parseSizes(productSizeAttr.value);
+        } else {
+          productSizes = [
+            { label: productSizeAttr.value, value: productSizeAttr.value },
+          ];
+        }
+      }
       const inStock = parseInt(productListing.inStock, 10);
 
       const disable = inStock < 1 || isNaN(inStock);
