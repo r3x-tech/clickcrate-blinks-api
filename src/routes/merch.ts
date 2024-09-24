@@ -87,7 +87,9 @@ router.get(
         productSizes = parseSizes(productSizeAttr.value);
       }
 
-      const disable = productListing.inStock.lt(1);
+      const inStock = parseInt(productListing.inStock, 10);
+
+      const disable = inStock < 1 || isNaN(inStock);
       console.log("blink disabled? ", disable);
 
       const buttonText = disable
