@@ -100,9 +100,7 @@ router.get(
 
       const salePrice = productListing.price / LAMPORTS_PER_SOL;
 
-      const buttonText = disable
-        ? "SOLD OUT"
-        : `Buy for ${productListing.price} SOL`;
+      const buttonText = disable ? "SOLD OUT" : `Buy for ${salePrice} SOL`;
       console.log("buttonText: ", buttonText);
 
       const responseBody: ActionGetResponse = {
