@@ -54,7 +54,7 @@ router.get(
       }
 
       const productListingAsset = await fetchDasCoreCollection(
-        clickcrateAsset.product.toBase58(),
+        clickcrateAsset.product,
         "devnet"
       );
       console.log("fetched productListingAsset: ", productListingAsset);
