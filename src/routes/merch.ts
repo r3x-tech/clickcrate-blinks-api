@@ -241,31 +241,6 @@ router.post("/purchase", async (req, res, next) => {
     const paymentTx = Buffer.from(relayTx.serialize()).toString("base64");
     console.log("Responding with this paymentTx: ", paymentTx);
 
-    // const payload: ActionPostResponse = {
-    //   transaction: paymentTx,
-    //   message: `Purchase successful! Order confirmation emailed to: ${shippingEmail}`,
-    //   links: {
-    //     next: {
-    //       type: "inline",
-    //       action: {
-    //         type: "action",
-    //         icon: `https://shdw-drive.genesysgo.net/CiJnYeRgNUptSKR4MmsAPn7Zhp6LSv91ncWTuNqDLo7T/horizontalmerchcreatoricon.png`,
-    //         label: `Purchase ${productName}`,
-    //         title: `${productName}`,
-    //         description: `Confirm`,
-    //         links: {
-    //           actions: [
-    //             {
-    //               href: `/merch/complete?clickcrateId=${clickcrateId}&productName=${productName}&productIcon=${productIcon}&productDescription=${productDescription}&shippingEmail=${shippingEmail}`,
-    //               label: "Confirm",
-    //             },
-    //           ],
-    //         },
-    //       },
-    //     },
-    //   },
-    // };
-
     const payload: ActionPostResponse = {
       transaction: paymentTx,
       message: `Purchase successful! Order confirmation emailed to: ${shippingEmail}`,
@@ -277,7 +252,7 @@ router.post("/purchase", async (req, res, next) => {
             icon: `${productIcon}`,
             label: "Purchase successful!",
             title: `${productName}`,
-            description: `${productDescription}`,
+            description: `Purchase successful! Order confirmation emailed to: ${shippingEmail}`,
           },
         },
       },
@@ -290,55 +265,6 @@ router.post("/purchase", async (req, res, next) => {
       .status(400)
       .set(ACTIONS_CORS_HEADERS_MIDDLEWARE)
       .json({ message: "Failed to purchase" });
-  }
-});
-
-router.post("/complete", async (req, res, next) => {
-  try {
-    console.log("req.body is: ", req.body);
-
-    const { account } = req.body;
-    const publicKey = new PublicKey(account);
-
-    const {
-      clickcrateId,
-      shippingEmail,
-      productName,
-      productDescription,
-      productIcon,
-    } = req.query;
-    console.log("req.query: ", req.query);
-
-    const relayTx = await relayPaymentTransaction(0.001, publicKey, "mainnet");
-    console.log("Initiating verification");
-
-    const paymentTx = Buffer.from(relayTx.serialize()).toString("base64");
-    console.log("Responding with this paymentTx: ", paymentTx);
-
-    const payload: ActionPostResponse = {
-      transaction: paymentTx,
-      message: `Purchase successful! Order confirmation emailed to: ${shippingEmail}`,
-      links: {
-        next: {
-          type: "inline",
-          action: {
-            type: "completed",
-            icon: `${productIcon}`,
-            label: "Purchase successful!",
-            title: `${productName}`,
-            description: `${productDescription}`,
-          },
-        },
-      },
-    };
-    console.log("Sending response:", JSON.stringify(payload, null, 2));
-    res.status(200).json(payload);
-  } catch (error) {
-    console.error("Error in POST /complete", error);
-    res
-      .status(400)
-      .set(ACTIONS_CORS_HEADERS_MIDDLEWARE)
-      .json({ message: "Failed to complete purchase" });
   }
 });
 
