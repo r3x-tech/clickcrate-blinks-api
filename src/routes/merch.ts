@@ -116,7 +116,7 @@ router.get("/:clickcrateId", async (req, res, next) => {
       links: {
         actions: [
           {
-            href: `/purchase?clickcrateId=${clickcrateId}&productName=${productListingAsset.content.metadata.name}&productSizes=${productSizeAttr?.value}&productIcon=${icon}&productDescription=${productListingAsset.content.metadata.description}`,
+            href: `/merch/purchase?clickcrateId=${clickcrateId}&productName=${productListingAsset.content.metadata.name}&productSizes=${productSizeAttr?.value}&productIcon=${icon}&productDescription=${productListingAsset.content.metadata.description}`,
             label: `${buttonText}`,
             parameters: [
               {
@@ -241,7 +241,7 @@ router.post("/purchase", async (req, res, next) => {
             links: {
               actions: [
                 {
-                  href: `/complete?clickcrateId=${clickcrateId}&productName=${productName}&productIcon=${productIcon}&productDescription=${productDescription}&shippingEmail=${shippingEmail}`,
+                  href: `/merch/complete?clickcrateId=${clickcrateId}&productName=${productName}&productIcon=${productIcon}&productDescription=${productDescription}&shippingEmail=${shippingEmail}`,
                   label: "Confirm",
                 },
               ],
