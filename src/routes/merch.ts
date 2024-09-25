@@ -252,7 +252,7 @@ router.post("/purchase", async (req, res, next) => {
             icon: `${productIcon}`,
             label: "Purchase successful!",
             title: `${productName}`,
-            description: `Purchase successful! Order confirmation emailed to: ${shippingEmail}`,
+            description: `Order confirmation emailed to: ${shippingEmail}`,
           },
         },
       },
