@@ -241,6 +241,31 @@ router.post("/purchase", async (req, res, next) => {
     const paymentTx = Buffer.from(relayTx.serialize()).toString("base64");
     console.log("Responding with this paymentTx: ", paymentTx);
 
+    // const payload: ActionPostResponse = {
+    //   transaction: paymentTx,
+    //   message: `Purchase successful! Order confirmation emailed to: ${shippingEmail}`,
+    //   links: {
+    //     next: {
+    //       type: "inline",
+    //       action: {
+    //         type: "action",
+    //         icon: `https://shdw-drive.genesysgo.net/CiJnYeRgNUptSKR4MmsAPn7Zhp6LSv91ncWTuNqDLo7T/horizontalmerchcreatoricon.png`,
+    //         label: `Purchase ${productName}`,
+    //         title: `${productName}`,
+    //         description: `Confirm`,
+    //         links: {
+    //           actions: [
+    //             {
+    //               href: `/merch/complete?clickcrateId=${clickcrateId}&productName=${productName}&productIcon=${productIcon}&productDescription=${productDescription}&shippingEmail=${shippingEmail}`,
+    //               label: "Confirm",
+    //             },
+    //           ],
+    //         },
+    //       },
+    //     },
+    //   },
+    // };
+
     const payload: ActionPostResponse = {
       transaction: paymentTx,
       message: `Purchase successful! Order confirmation emailed to: ${shippingEmail}`,
@@ -248,19 +273,11 @@ router.post("/purchase", async (req, res, next) => {
         next: {
           type: "inline",
           action: {
-            type: "action",
-            icon: `https://shdw-drive.genesysgo.net/CiJnYeRgNUptSKR4MmsAPn7Zhp6LSv91ncWTuNqDLo7T/horizontalmerchcreatoricon.png`,
-            label: `Purchase ${productName}`,
+            type: "completed",
+            icon: `${productIcon}`,
+            label: "Purchase successful!",
             title: `${productName}`,
-            description: `Confirm`,
-            links: {
-              actions: [
-                {
-                  href: `/merch/complete?clickcrateId=${clickcrateId}&productName=${productName}&productIcon=${productIcon}&productDescription=${productDescription}&shippingEmail=${shippingEmail}`,
-                  label: "Confirm",
-                },
-              ],
-            },
+            description: `${productDescription}`,
           },
         },
       },
@@ -307,7 +324,7 @@ router.post("/complete", async (req, res, next) => {
           action: {
             type: "completed",
             icon: `${productIcon}`,
-            label: "Purchased successful!",
+            label: "Purchase successful!",
             title: `${productName}`,
             description: `${productDescription}`,
           },
