@@ -31,155 +31,152 @@ const blinkCorsMiddleware = (
 };
 router.use(blinkCorsMiddleware);
 
-router.get(
-  "/:clickcrateId",
-  async (req: express.Request, res: express.Response) => {
-    try {
-      const { clickcrateId } = req.params;
-      if (!clickcrateId || clickcrateId === "") {
-        return res.status(400).json({ message: "ClickCrate not found" });
-      }
+router.get("/:clickcrateId", async (req, res, next) => {
+  try {
+    const { clickcrateId } = req.params;
+    if (!clickcrateId || clickcrateId === "") {
+      return res.status(400).json({ message: "ClickCrate not found" });
+    }
 
-      const clickcrateAssetResponse = await fetchRegisteredClickcrate(
-        clickcrateId
+    const clickcrateAssetResponse = await fetchRegisteredClickcrate(
+      clickcrateId
+    );
+    console.log("fetched ClickCrate response: ", clickcrateAssetResponse);
+
+    const clickcrateAsset = clickcrateAssetResponse.data;
+    console.log("fetched ClickCrate: ", clickcrateAsset);
+
+    if (!clickcrateAsset.product) {
+      return res
+        .status(404)
+        .json({ message: "Product not found in ClickCrate" });
+    }
+
+    const productListingAsset = await fetchDasCoreCollection(
+      clickcrateAsset.product,
+      "devnet"
+    );
+    console.log("fetched productListingAsset: ", productListingAsset);
+
+    const productListingResponse = await fetchRegisteredProductListing(
+      clickcrateAsset.product
+    );
+    console.log("fetched productListing response: ", productListingResponse);
+
+    const productListing = productListingResponse.data;
+    console.log("fetched productListing: ", productListing);
+
+    if (!productListingAsset || !productListing) {
+      return res.status(404).json({ message: "Product info not found" });
+    }
+
+    const response = await fetch(productListingAsset.uri);
+    const jsonImageData = await response.json();
+    const icon =
+      jsonImageData.image ||
+      "https://shdw-drive.genesysgo.net/3CjrSiTMjg73qjNb9Phpd54sT2ZNXM6YmUudRHvwwppx/clickcrate%20pos%20placeholder.svg";
+    const productSizeAttr =
+      productListingAsset.content.metadata.attributes?.find(
+        (attr): attr is Attribute =>
+          isAttribute(attr) && attr.trait_type === "Size(s)"
       );
-      console.log("fetched ClickCrate response: ", clickcrateAssetResponse);
 
-      const clickcrateAsset = clickcrateAssetResponse.data;
-      console.log("fetched ClickCrate: ", clickcrateAsset);
+    let productSizes: { label: string; value: string }[] = [];
 
-      if (!clickcrateAsset.product) {
-        return res
-          .status(404)
-          .json({ message: "Product not found in ClickCrate" });
+    if (productSizeAttr && productSizeAttr.value) {
+      if (productSizeAttr.value.includes(",")) {
+        productSizes = parseSizes(productSizeAttr.value);
+      } else {
+        productSizes = [
+          { label: productSizeAttr.value, value: productSizeAttr.value },
+        ];
       }
+    }
+    const inStock = parseInt(productListing.inStock, 10);
 
-      const productListingAsset = await fetchDasCoreCollection(
-        clickcrateAsset.product,
-        "devnet"
-      );
-      console.log("fetched productListingAsset: ", productListingAsset);
+    const disable = inStock < 1 || isNaN(inStock);
+    console.log("blink disabled? ", disable);
 
-      const productListingResponse = await fetchRegisteredProductListing(
-        clickcrateAsset.product
-      );
-      console.log("fetched productListing response: ", productListingResponse);
+    const salePrice = productListing.price / LAMPORTS_PER_SOL;
 
-      const productListing = productListingResponse.data;
-      console.log("fetched productListing: ", productListing);
+    const buttonText = disable ? "SOLD OUT" : `Buy for ${salePrice} SOL`;
+    console.log("buttonText: ", buttonText);
 
-      if (!productListingAsset || !productListing) {
-        return res.status(404).json({ message: "Product info not found" });
-      }
-
-      const response = await fetch(productListingAsset.uri);
-      const jsonImageData = await response.json();
-      const icon =
-        jsonImageData.image ||
-        "https://shdw-drive.genesysgo.net/3CjrSiTMjg73qjNb9Phpd54sT2ZNXM6YmUudRHvwwppx/clickcrate%20pos%20placeholder.svg";
-      const productSizeAttr =
-        productListingAsset.content.metadata.attributes?.find(
-          (attr): attr is Attribute =>
-            isAttribute(attr) && attr.trait_type === "Size(s)"
-        );
-
-      let productSizes: { label: string; value: string }[] = [];
-
-      if (productSizeAttr && productSizeAttr.value) {
-        if (productSizeAttr.value.includes(",")) {
-          productSizes = parseSizes(productSizeAttr.value);
-        } else {
-          productSizes = [
-            { label: productSizeAttr.value, value: productSizeAttr.value },
-          ];
-        }
-      }
-      const inStock = parseInt(productListing.inStock, 10);
-
-      const disable = inStock < 1 || isNaN(inStock);
-      console.log("blink disabled? ", disable);
-
-      const salePrice = productListing.price / LAMPORTS_PER_SOL;
-
-      const buttonText = disable ? "SOLD OUT" : `Buy for ${salePrice} SOL`;
-      console.log("buttonText: ", buttonText);
-
-      const responseBody: ActionGetResponse = {
-        icon,
-        label: `Purchase ${productListingAsset.content.metadata.name}`,
-        title: `${productListingAsset.content.metadata.name}`,
-        description: `IN STOCK: ${productListing.inStock} | SIZE: ${
-          productSizeAttr?.value || "N/A"
-        } | DELIVERY: ~2 weeks 
+    const responseBody: ActionGetResponse = {
+      icon,
+      label: `Purchase ${productListingAsset.content.metadata.name}`,
+      title: `${productListingAsset.content.metadata.name}`,
+      description: `IN STOCK: ${productListing.inStock} | SIZE: ${
+        productSizeAttr?.value || "N/A"
+      } | DELIVERY: ~2 weeks 
         \n${productListingAsset.content.metadata.description}
         \nOrder confirmations and updates will be sent to your provided email address. To avoid delays ensure all information is correct.
         \nNeed help? Send us a DM @click_crate on Twitter or email us at support@clickcrate.xyz`,
-        disabled: disable,
-        links: {
-          actions: [
-            {
-              href: `/purchase?clickcrateId=${clickcrateId}&productName=${productListingAsset.content.metadata.name}&productSizes=${productSizeAttr?.value}&productIcon=${icon}&productDescription=${productListingAsset.content.metadata.description}`,
-              label: `${buttonText}`,
-              parameters: [
-                {
-                  name: "size",
-                  label: "Select a size",
-                  required: true,
-                  type: "select",
-                  options: productSizes,
-                },
-                {
-                  name: "buyerName",
-                  label: "First & Last name",
-                  required: true,
-                  type: "text",
-                },
-                {
-                  name: "shippingEmail",
-                  label: "Email",
-                  required: true,
-                  type: "email",
-                },
-                {
-                  name: "shippingAddress",
-                  label: "Address (including Apt., Suite, etc.)",
-                  required: true,
-                  type: "text",
-                },
-                { name: "shippingCity", label: "City", required: true },
-                {
-                  name: "shippingStateProvince",
-                  label: "State/Province",
-                  required: true,
-                  type: "text",
-                },
-                {
-                  name: "shippingCountryRegion",
-                  label: "Country/Region",
-                  required: true,
-                  type: "text",
-                },
-                {
-                  name: "shippingZipCode",
-                  label: "ZIP code",
-                  required: true,
-                  type: "text",
-                },
-              ],
-            },
-          ],
-        },
-      };
+      disabled: disable,
+      links: {
+        actions: [
+          {
+            href: `/purchase?clickcrateId=${clickcrateId}&productName=${productListingAsset.content.metadata.name}&productSizes=${productSizeAttr?.value}&productIcon=${icon}&productDescription=${productListingAsset.content.metadata.description}`,
+            label: `${buttonText}`,
+            parameters: [
+              {
+                name: "size",
+                label: "Select a size",
+                required: true,
+                type: "select",
+                options: productSizes,
+              },
+              {
+                name: "buyerName",
+                label: "First & Last name",
+                required: true,
+                type: "text",
+              },
+              {
+                name: "shippingEmail",
+                label: "Email",
+                required: true,
+                type: "email",
+              },
+              {
+                name: "shippingAddress",
+                label: "Address (including Apt., Suite, etc.)",
+                required: true,
+                type: "text",
+              },
+              { name: "shippingCity", label: "City", required: true },
+              {
+                name: "shippingStateProvince",
+                label: "State/Province",
+                required: true,
+                type: "text",
+              },
+              {
+                name: "shippingCountryRegion",
+                label: "Country/Region",
+                required: true,
+                type: "text",
+              },
+              {
+                name: "shippingZipCode",
+                label: "ZIP code",
+                required: true,
+                type: "text",
+              },
+            ],
+          },
+        ],
+      },
+    };
 
-      console.log("blink response: ", responseBody);
+    console.log("blink response: ", responseBody);
 
-      res.status(200).json(responseBody);
-    } catch (error) {
-      console.error("Error in GET merch blink /:", error);
-      res.status(400).json({ message: "Bad Request" });
-    }
+    res.status(200).json(responseBody);
+  } catch (error) {
+    console.error("Error in GET merch blink /:", error);
+    next(error);
   }
-);
+});
 
 router.post("/purchase", async (req, res, next) => {
   try {

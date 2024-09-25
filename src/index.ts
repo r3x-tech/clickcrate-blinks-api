@@ -12,9 +12,8 @@ import { ACTIONS_CORS_HEADERS_MIDDLEWARE } from "@solana/actions";
 const app: Express = express();
 const port = process.env.PORT || 8080;
 
-app.use(cors(ACTIONS_CORS_HEADERS_MIDDLEWARE));
 app.use(express.json());
-
+app.use(cors(ACTIONS_CORS_HEADERS_MIDDLEWARE));
 // app.use((req: Request, res: Response, next: NextFunction) => {
 //   res.set(ACTIONS_CORS_HEADERS_MIDDLEWARE);
 //   next();
