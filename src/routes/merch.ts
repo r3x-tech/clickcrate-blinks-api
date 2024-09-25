@@ -206,8 +206,23 @@ router.post("/purchase", async (req, res, next) => {
     } = req.query;
     console.log("req.query: ", req.query);
 
+    if (!account) {
+      console.error("Missing account: ", account);
+      throw Error("Missing required parameters");
+    }
+
     if (
       !clickcrateId ||
+      !productName ||
+      !productSizes ||
+      !productDescription ||
+      !productIcon
+    ) {
+      console.error("Missing query parameters in purchase!!!");
+      throw Error("Missing required parameters");
+    }
+
+    if (
       !size ||
       !buyerName ||
       !shippingEmail ||
@@ -216,7 +231,7 @@ router.post("/purchase", async (req, res, next) => {
       !shippingCountryRegion ||
       !shippingZipCode
     ) {
-      console.error("Missing required parameters in verify-and-place!!!");
+      console.error("Missing body parameters in purchase!!!");
       throw Error("Missing required parameters");
     }
 
