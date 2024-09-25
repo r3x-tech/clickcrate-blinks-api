@@ -3,6 +3,7 @@ import { LAMPORTS_PER_SOL, PublicKey } from "@solana/web3.js";
 import { Attribute } from "../models/schemas";
 import {
   ActionGetResponse,
+  ActionPostResponse,
   ACTIONS_CORS_HEADERS_MIDDLEWARE,
 } from "@solana/actions";
 import {
@@ -225,7 +226,7 @@ router.post("/purchase", async (req, res, next) => {
     const paymentTx = Buffer.from(relayTx.serialize()).toString("base64");
     console.log("Responding with this paymentTx: ", paymentTx);
 
-    const payload = {
+    const payload: ActionPostResponse = {
       transaction: paymentTx,
       message: `Purchase successful! Order confirmation emailed to: ${shippingEmail}`,
       links: {
@@ -252,8 +253,8 @@ router.post("/purchase", async (req, res, next) => {
     console.log("Sending response:", JSON.stringify(payload, null, 2));
     res.status(200).json(payload);
   } catch (error) {
-    console.error("Error in POST /verify-and-place:", error);
-    next(error);
+    console.error("Error in POST /purchase:", error);
+    res.status(400).json({ message: "Failed to purchase" });
   }
 });
 
@@ -279,7 +280,7 @@ router.post("/complete", async (req, res, next) => {
     const paymentTx = Buffer.from(relayTx.serialize()).toString("base64");
     console.log("Responding with this paymentTx: ", paymentTx);
 
-    const payload = {
+    const payload: ActionPostResponse = {
       transaction: paymentTx,
       message: `Purchase successful! Order confirmation emailed to: ${shippingEmail}`,
       links: {
@@ -298,8 +299,8 @@ router.post("/complete", async (req, res, next) => {
     console.log("Sending response:", JSON.stringify(payload, null, 2));
     res.status(200).json(payload);
   } catch (error) {
-    console.error("Error in POST /verify-and-place:", error);
-    next(error);
+    console.error("Error in POST /complete", error);
+    res.status(400).json({ message: "Failed to complete purchase" });
   }
 });
 
