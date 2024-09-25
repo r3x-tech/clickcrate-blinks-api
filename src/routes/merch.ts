@@ -183,19 +183,17 @@ router.get("/:clickcrateId", async (req, res, next) => {
 
 router.post("/purchase", async (req, res, next) => {
   try {
-    console.log("req.body is: ", req.body);
-
+    const { account } = req.body;
     const {
-      account,
       size,
       buyerName,
       shippingEmail,
       shippingAddress,
+      shippingCity,
       shippingStateProvince,
       shippingCountryRegion,
       shippingZipCode,
-    } = req.body;
-    const publicKey = new PublicKey(account);
+    } = req.body.data;
 
     const {
       clickcrateId,
@@ -227,6 +225,7 @@ router.post("/purchase", async (req, res, next) => {
       !buyerName ||
       !shippingEmail ||
       !shippingAddress ||
+      !shippingCity ||
       !shippingStateProvince ||
       !shippingCountryRegion ||
       !shippingZipCode
@@ -235,6 +234,7 @@ router.post("/purchase", async (req, res, next) => {
       throw Error("Missing required parameters");
     }
 
+    const publicKey = new PublicKey(account);
     const relayTx = await relayPaymentTransaction(0.001, publicKey, "mainnet");
     console.log("Initiating verification");
 
