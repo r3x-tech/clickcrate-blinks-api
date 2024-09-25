@@ -174,7 +174,10 @@ router.get("/:clickcrateId", async (req, res, next) => {
     res.status(200).json(responseBody);
   } catch (error) {
     console.error("Error in GET merch blink /:", error);
-    next(error);
+    res
+      .status(400)
+      .set(ACTIONS_CORS_HEADERS_MIDDLEWARE)
+      .json({ message: "Failed to get merch blink" });
   }
 });
 
@@ -251,7 +254,10 @@ router.post("/purchase", async (req, res, next) => {
     res.status(200).json(payload);
   } catch (error) {
     console.error("Error in POST /purchase:", error);
-    res.status(400).json({ message: "Failed to purchase" });
+    res
+      .status(400)
+      .set(ACTIONS_CORS_HEADERS_MIDDLEWARE)
+      .json({ message: "Failed to purchase" });
   }
 });
 
@@ -297,7 +303,10 @@ router.post("/complete", async (req, res, next) => {
     res.status(200).json(payload);
   } catch (error) {
     console.error("Error in POST /complete", error);
-    res.status(400).json({ message: "Failed to complete purchase" });
+    res
+      .status(400)
+      .set(ACTIONS_CORS_HEADERS_MIDDLEWARE)
+      .json({ message: "Failed to complete purchase" });
   }
 });
 
