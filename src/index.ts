@@ -35,6 +35,7 @@ app.get("/", (req, res) => {
 app.use("/creator", productCreatorRoutes);
 app.use("/merch", merchRoutes);
 app.use("/shipping", shippingInfoRoutes);
+app.use("/storefront", shippingInfoRoutes);
 
 app.use(errorHandler);
 
