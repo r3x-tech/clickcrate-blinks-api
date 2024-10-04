@@ -32,12 +32,18 @@ router.get("/", (req, res) => {
   const { pos1, pos2, pos3 } = req.query;
 
   // Fetch details for each registered pos
+  // fetchRegisteredClickcrate(pos1)
+  // fetchRegisteredClickcrate(pos2)
+  // fetchRegisteredClickcrate(pos3)
 
   // Fetch details for each registered product listing thats placed in each pos
+  // fetchRegisteredProductListing(pos1)
+  // fetchRegisteredProductListing(pos2)
+  // fetchRegisteredProductListing(pos3)
 
-  // Create svg from the four icon for each item (leave for last)
+  // Create svg from the four icon for each item (leave for last, can temporarily/as fallback use this: https://shdw-drive.genesysgo.net/3CjrSiTMjg73qjNb9Phpd54sT2ZNXM6YmUudRHvwwppx/clickcrate_storefront.svg
 
-  // Make Label Product Name
+  // Set label to product listing name
 
   // Make # of POSs optional 1-4
 
@@ -50,15 +56,15 @@ router.get("/", (req, res) => {
     links: {
       actions: [
         {
-          href: `https://api.clickcrate.xyz/blink/${pos1}`,
+          href: `/merch/purchase?clickcrateId=${pos1}&productName=${productListingAsset.content.metadata.name}&productSizes=${productSizeAttr?.value}&productIcon=${icon}&productDescription=${productListingAsset.content.metadata.description}`,
           label: "Shirt",
         },
         {
-          href: `https://api.clickcrate.xyz/blink/${pos2}`,
+          href: `/merch/purchase?clickcrateId=${pos2}&productName=${productListingAsset.content.metadata.name}&productSizes=${productSizeAttr?.value}&productIcon=${icon}&productDescription=${productListingAsset.content.metadata.description}`,
           label: "Cap",
         },
         {
-          href: `https://api.clickcrate.xyz/blink/${pos3}`,
+          href: `/merch/purchase?clickcrateId=${pos1}&productName=${productListingAsset.content.metadata.name}&productSizes=${productSizeAttr?.value}&productIcon=${icon}&productDescription=${productListingAsset.content.metadata.description}`,
           label: "Belt",
         },
       ],
@@ -66,38 +72,5 @@ router.get("/", (req, res) => {
   };
   res.status(200).json(payload);
 });
-
-// router.post("/purchase/:productId", async (req, res) => {
-//   try {
-//     const payload: ActionPostResponse = {
-//       transaction: "dummy_transaction_base64",
-//       message: "This blink allows you to purchase",
-//       links: {
-//         next: {
-//           type: "inline",
-//           action: {
-//             type: "action",
-//             icon: "https://example.com/verify-icon.png",
-//             label: "Buy product",
-//             title: "Buy the specific product",
-//             description: "Buy the product from this blink",
-//             links: {
-//               actions: [
-//                 {
-//                   href: `/api/procucts/`,
-//                   label: "Back",
-//                 },
-//               ],
-//             },
-//           },
-//         },
-//       },
-//     };
-//     res.json(payload);
-//   } catch (error) {
-//     console.error("Error Buying the product:", error);
-//     res.status(400).json({ error: "Invalid data" });
-//   }
-// });
 
 export default router;
