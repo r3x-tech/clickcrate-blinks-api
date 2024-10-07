@@ -47,6 +47,8 @@ router.get("/", (req, res) => {
 
   // Make # of POSs optional 1-4
 
+  //
+
   const payload: ActionGetResponse = {
     icon: "https://shdw-drive.genesysgo.net/CiJnYeRgNUptSKR4MmsAPn7Zhp6LSv91ncWTuNqDLo7T/autofill_checkout_button_bottom.png",
     label: "Choose a product",
@@ -74,3 +76,19 @@ router.get("/", (req, res) => {
 });
 
 export default router;
+
+
+api.clickcrate.xyz/storefronts/?pos1=xyz
+// Step 1: Gets blinks and all linked products
+
+
+api.clickcrate.xyz/storefronts/purchase/?pos1=xyz + any other needed params like icon/label/inputs
+// Step 2: Ask user to input info needed for wrapped post 
+
+
+
+api.clickcrate.xyz/blink/purchase?clickcrateId=FBHLaCcZpBngNpDDirH1DLo1jtgeR7RNGBJDNT4kXDez&buyerName={buyerName}&shippingEmail={shippingEmail}&shippingAddress={shippingAddress}&shippingCity={shippingCity}&shippingStateProvince={shippingStateProvince}&shippingCountryRegion={shippingCountryRegion}&shippingZipCode={shippingZipCode}
+// Step 3: Passes user inputted paramters to wrapped post action and returns the wrapped action allowing user to make purchase transaction for the product
+
+
+
