@@ -320,3 +320,52 @@ export async function verifyCode(email: string, code: string) {
     };
   }
 }
+
+export async function getClickCreatePointOfSale(posId: string) {
+  try {
+    const response = await clickcrateAxios.get(
+      `https://api.clickcrate.xyz/blink/${posId}`,
+      {
+        headers: {
+          Authorization: `Bearer ${process.env.CLICKCRATE_API_KEY}`,
+        },
+      }
+    );
+    return response;
+  } catch (error) {
+    console.error("Error verifying code:", error);
+    if (axios.isAxiosError(error)) {
+      return {
+        status: error.response?.status || 500,
+        data: error.response?.data || { message: "Unknown error occurred" },
+      };
+    }
+    return {
+      status: 500,
+      data: { message: "An unexpected error occurred" },
+    };
+  }
+}
+
+export async function getActionsArr(
+  posArr: string[]
+): Promise<{ href: string; label: string }[]> {
+  const actionsArr: { href: string; label: string }[] = [];
+  await Promise.all(
+    posArr.map(async (pos) => {
+      const response = await getClickCreatePointOfSale(pos);
+      const action = response.data.links.actions[0];
+      const href = action.href;
+      const urlParams = new URLSearchParams(href.split("?")[1]);
+      const queryString = urlParams.toString();
+      const finalHref = `/storefront/input/${pos}?${queryString}`;
+
+      actionsArr.push({
+        href: finalHref,
+        label: response.data.label,
+      });
+    })
+  );
+
+  return actionsArr;
+}

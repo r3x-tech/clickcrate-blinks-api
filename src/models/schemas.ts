@@ -61,6 +61,49 @@ export const ShippingDetailsSchema = z.object({
   shippingZipCode: z.string(),
 });
 
+export const ProductLabelSchema = z.object({
+  label: z.string(),
+});
+
+export const fieldMappingSchema = z.object({
+  buyerName: z.string(),
+  shippingEmail: z.string(),
+  shippingAddress: z.string(),
+  shippingCity: z.string(),
+  shippingStateProvince: z.string(),
+  shippingCountryRegion: z.string(),
+  shippingZipCode: z.string(),
+});
+
+export const ActionParameterTypeSchema = z.enum([
+  "text",
+  "email",
+  "url",
+  "number",
+  "date",
+  "datetime-local",
+  "textarea",
+]);
+
+const ActionParameterSelectableBaseSchema = z.object({
+  name: z.string(),
+  label: z.string(),
+  required: z.boolean(),
+});
+
+export const ActionParameterSelectableSchema = <
+  T extends ActionParameterType
+>() =>
+  ActionParameterSelectableBaseSchema.extend({
+    type: ActionParameterTypeSchema.refine((type) => type as T),
+  });
+
 export type ProductType = z.infer<typeof ProductTypeSchema>;
 export type ProductInfo = z.infer<typeof ProductInfoSchema>;
 export type ShippingInfo = z.infer<typeof ShippingDetailsSchema>;
+export type LabelType = z.infer<typeof ProductLabelSchema>;
+export type FieldMapping = z.infer<typeof fieldMappingSchema>;
+export type ActionParameterType = z.infer<typeof ActionParameterTypeSchema>;
+export type ActionParameterSelectable<T extends ActionParameterType> = z.infer<
+  ReturnType<typeof ActionParameterSelectableSchema<T>>
+>;

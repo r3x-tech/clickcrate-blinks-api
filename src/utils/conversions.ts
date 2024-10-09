@@ -8,7 +8,12 @@ import {
   Transaction as SolanaTransaction,
   LAMPORTS_PER_SOL,
 } from "@solana/web3.js";
-import { Attribute } from "../models/schemas";
+import {
+  ActionParameterSelectable,
+  ActionParameterType,
+  Attribute,
+  FieldMapping,
+} from "../models/schemas";
 
 export const getOriginFromString = (origin: string): any => {
   switch (origin) {
@@ -107,3 +112,44 @@ export function parseSizes(
   // Create an array of objects with label and value properties
   return sizes.map((size) => ({ label: size, value: size }));
 }
+
+export const convertToLabel = (
+  key: keyof FieldMapping,
+  fieldMapping: FieldMapping
+) => {
+  return (
+    fieldMapping[key] ||
+    key.replace(/([A-Z])/g, " $1").replace(/^./, (str) => str.toUpperCase())
+  );
+};
+
+export const getParameters = (
+  restQueryParams: Record<string, any>,
+  fieldMapping: FieldMapping
+) => {
+  const parameters: ActionParameterSelectable<ActionParameterType>[] =
+    Object.keys(restQueryParams).map((paramKey) => {
+      const label = convertToLabel(
+        paramKey as keyof FieldMapping,
+        fieldMapping
+      );
+      let type: ActionParameterType = "text"; // Default type
+
+      if (paramKey.toLowerCase().includes("email")) {
+        type = "email";
+      } else if (
+        paramKey.toLowerCase().includes("zip") ||
+        paramKey.toLowerCase().includes("postal")
+      ) {
+        type = "text";
+      }
+
+      return {
+        name: paramKey,
+        label,
+        type,
+        required: true,
+      } as ActionParameterSelectable<ActionParameterType>;
+    });
+  return parameters;
+};
