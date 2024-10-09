@@ -18,7 +18,6 @@ import {
 import { getParameters } from "../utils/conversions";
 
 const router = express.Router();
-const CLICKCRATE_API_URL = process.env.CLICKCRATE_API_URL;
 const blinkCorsMiddleware = (
   req: express.Request,
   res: express.Response,
