@@ -1,6 +1,6 @@
 import express from "express";
 import { LAMPORTS_PER_SOL, PublicKey } from "@solana/web3.js";
-import { Attribute } from "../models/schemas";
+import { Attribute, MetaplexAttribute } from "../models/schemas";
 import {
   ActionGetResponse,
   ActionPostResponse,
@@ -11,7 +11,7 @@ import {
   fetchRegisteredClickcrate,
 } from "../services/clickcrateApiService";
 import { fetchDasCoreCollection } from "../services/metaplexService";
-import { isAttribute, parseSizes } from "../utils/conversions";
+import { parseSizes } from "../utils/conversions";
 import { relayPaymentTransaction } from "../services/solanaService";
 
 const router = express.Router();
@@ -75,31 +75,48 @@ router.get("/:clickcrateId", async (req, res, next) => {
     const icon =
       jsonImageData.image ||
       "https://shdw-drive.genesysgo.net/3CjrSiTMjg73qjNb9Phpd54sT2ZNXM6YmUudRHvwwppx/clickcrate%20pos%20placeholder.svg";
-    const productSizeAttr =
-      productListingAsset.content.metadata.attributes?.find(
-        (attr): attr is Attribute =>
-          isAttribute(attr) && attr.trait_type === "Size(s)"
+
+    // Updated size extraction logic
+    let productSizeAttr: MetaplexAttribute | undefined;
+
+    // First, try to find size in metadata attributes
+    productSizeAttr = productListingAsset.content.metadata.attributes?.find(
+      (attr: MetaplexAttribute) => attr.trait_type === "Size(s)"
+    );
+
+    // If not found, try to find in attributeList
+    if (!productSizeAttr && productListingAsset.attributes) {
+      productSizeAttr = productListingAsset.attributes.attributeList.find(
+        (attr: any) => attr.key === "Size(s)"
       );
+    }
+
+    console.log("Found productSizeAttr:", productSizeAttr);
 
     let productSizes: { label: string; value: string }[] = [];
 
-    if (productSizeAttr && productSizeAttr.value) {
-      if (productSizeAttr.value.includes(",")) {
+    if (productSizeAttr && productSizeAttr.value !== undefined) {
+      if (
+        typeof productSizeAttr.value === "string" &&
+        productSizeAttr.value.includes(",")
+      ) {
         productSizes = parseSizes(productSizeAttr.value);
       } else {
         productSizes = [
-          { label: productSizeAttr.value, value: productSizeAttr.value },
+          {
+            label: String(productSizeAttr.value),
+            value: String(productSizeAttr.value),
+          },
         ];
       }
     }
     console.log("fetched productSizes: ", productSizes);
-    const inStock = parseInt(productListing.inStock, 10);
 
+    const inStock = parseInt(productListing.inStock, 10);
     const disable = inStock < 1 || isNaN(inStock);
     console.log("blink disabled? ", disable);
 
     const salePrice = productListing.price / LAMPORTS_PER_SOL;
-
     const buttonText = disable ? "SOLD OUT" : `Buy for ${salePrice} SOL`;
     console.log("buttonText: ", buttonText);
 

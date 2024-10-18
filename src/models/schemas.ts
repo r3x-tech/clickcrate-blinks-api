@@ -107,3 +107,8 @@ export type ActionParameterType = z.infer<typeof ActionParameterTypeSchema>;
 export type ActionParameterSelectable<T extends ActionParameterType> = z.infer<
   ReturnType<typeof ActionParameterSelectableSchema<T>>
 >;
+export type MetaplexAttribute = {
+  trait_type?: string;
+  value?: string;
+  [key: string]: unknown;
+};
