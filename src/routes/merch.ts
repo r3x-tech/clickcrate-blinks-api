@@ -92,6 +92,7 @@ router.get("/:clickcrateId", async (req, res, next) => {
         ];
       }
     }
+    console.log("fetched productSizes: ", productSizes);
     const inStock = parseInt(productListing.inStock, 10);
 
     const disable = inStock < 1 || isNaN(inStock);
