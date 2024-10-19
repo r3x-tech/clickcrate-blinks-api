@@ -16,6 +16,7 @@ import {
   Signer,
   Umi,
   signerPayer,
+  publicKey,
 } from "@metaplex-foundation/umi";
 import { createUmi } from "@metaplex-foundation/umi-bundle-defaults";
 import { irysUploader } from "@metaplex-foundation/umi-uploader-irys";
@@ -34,6 +35,12 @@ import {
   mplCore,
 } from "@metaplex-foundation/mpl-core";
 import { createConnection, getRecentBlockhashWithRetry } from "./solanaService";
+import {
+  AssetResult,
+  CollectionResult,
+} from "@metaplex-foundation/mpl-core-das/dist/src/types";
+import { dasApi } from "@metaplex-foundation/digital-asset-standard-api";
+import { das } from "@metaplex-foundation/mpl-core-das";
 
 const createUmiUploader = (network: "devnet" | "mainnet") => {
   const rpcUrl =
@@ -42,6 +49,15 @@ const createUmiUploader = (network: "devnet" | "mainnet") => {
       : process.env.SOLANA_MAINNET_RPC_URL;
   const solanaConnection = new Connection(rpcUrl!, "confirmed");
   return createUmi(solanaConnection).use(mplCore()).use(irysUploader());
+};
+
+const createUmiFetcher = (network: "devnet" | "mainnet") => {
+  const rpcUrl =
+    network === "devnet"
+      ? process.env.SOLANA_DEVNET_RPC_URL
+      : process.env.SOLANA_MAINNET_RPC_URL;
+  const solanaConnection = new Connection(rpcUrl!, "confirmed");
+  return createUmi(solanaConnection).use(dasApi());
 };
 
 const uploadJsonUmi = async (data: any, network: "devnet" | "mainnet") => {
@@ -365,6 +381,35 @@ export const fetchAssetsByCollectionAddress = async (
     return assets;
   } catch (error) {
     console.error("Error fetching assets by collection", error);
+    throw error;
+  }
+};
+
+export const fetchDasCoreAsset = async (
+  assetId: string,
+  network: "devnet" | "mainnet"
+): Promise<AssetResult> => {
+  const umi = createUmiFetcher(network);
+  try {
+    const asset = await das.getAsset(umi, publicKey(assetId));
+    return asset;
+  } catch (error) {
+    console.error("Error fetching das core asset:", error);
+    throw error;
+  }
+};
+
+export const fetchDasCoreCollection = async (
+  collectionAddress: string,
+  network: "devnet" | "mainnet"
+): Promise<CollectionResult> => {
+  const umi = createUmiFetcher(network);
+  const collection = publicKey(collectionAddress);
+  try {
+    const collectionasset = await das.getCollection(umi, collection);
+    return collectionasset;
+  } catch (error) {
+    console.error("Error fetching das collection:", error);
     throw error;
   }
 };

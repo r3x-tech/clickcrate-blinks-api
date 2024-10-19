@@ -1,6 +1,6 @@
 import express from "express";
 import axios from "axios";
-import { PublicKey } from "@solana/web3.js";
+import { LAMPORTS_PER_SOL, PublicKey } from "@solana/web3.js";
 import {
   ProductInfoSchema,
   ProductTypeSchema,
@@ -11,6 +11,8 @@ import {
   ActionGetResponse,
   ActionPostResponse,
   ACTIONS_CORS_HEADERS_MIDDLEWARE,
+  CompletedAction,
+  createActionHeaders,
 } from "@solana/actions";
 import {
   createProducts,
@@ -29,20 +31,22 @@ import {
 } from "../services/clickcrateApiService";
 
 const router = express.Router();
-// const blinkCorsMiddleware = (
-//   req: express.Request,
-//   res: express.Response,
-//   next: express.NextFunction
-// ) => {
-//   res.set(ACTIONS_CORS_HEADERS_MIDDLEWARE);
-//   if (req.method === "OPTIONS") {
-//     return res.status(200).json({
-//       body: "OK",
-//     });
-//   }
-//   next();
-// };
-// router.use(blinkCorsMiddleware);
+const blinkCorsMiddleware = (
+  req: express.Request,
+  res: express.Response,
+  next: express.NextFunction
+) => {
+  res.set(ACTIONS_CORS_HEADERS_MIDDLEWARE);
+  if (req.method === "OPTIONS") {
+    return res.status(200).json({
+      body: "OK",
+    });
+  }
+  next();
+};
+router.use(blinkCorsMiddleware);
+
+// const headers = createActionHeaders();
 
 // Step 1: Choose product type and provide product info (GET)
 router.get("/", (req, res, next) => {
@@ -199,7 +203,7 @@ router.post("/create-product", async (req, res, next) => {
           type: "inline",
           action: {
             type: "action",
-            icon: "https://shdw-drive.genesysgo.net/CiJnYeRgNUptSKR4MmsAPn7Zhp6LSv91ncWTuNqDLo7T/horizontalmerchcreatoricon.png",
+            icon: `https://shdw-drive.genesysgo.net/CiJnYeRgNUptSKR4MmsAPn7Zhp6LSv91ncWTuNqDLo7T/horizontalmerchcreatoricon.png`,
             label: "Verify Email",
             title: "Enter Verification Code",
             description: `Please enter the 6-digit code sent to: ${email}`,
@@ -218,6 +222,12 @@ router.post("/create-product", async (req, res, next) => {
                       required: true,
                     },
                   ],
+                },
+                {
+                  href: `/creator/resend-verification?pos=${posCollectionAddress}&listing=${listingCollectionAddress}&products=${productAddresses.join(
+                    ","
+                  )}&price=${unitPrice}&account=${account}&email=${email}`,
+                  label: "Resend Verification Code",
                 },
               ],
             },
@@ -262,6 +272,8 @@ router.post("/verify-and-place", async (req, res, next) => {
       throw Error("Missing required parameters");
     }
 
+    const publicKey = new PublicKey(account);
+
     const verificationResponse = await verifyCode(email as string, code);
     console.log("Code verification response:", verificationResponse);
 
@@ -297,19 +309,33 @@ router.post("/verify-and-place", async (req, res, next) => {
 
     const registerListingResponse = await registerProductListing({
       productListingId: listing as string,
-      origin: "ClickCrate",
-      eligiblePlacementType: "digitalreplica",
+      origin: "clickcrate",
+      eligiblePlacementType: "relatedpurchase",
       eligibleProductCategory: "clothing",
       manager: account as string,
-      price: Number(price),
+      price: Math.round(Number(price) * LAMPORTS_PER_SOL),
       orderManager: "clickcrate",
     });
     console.log("registerListingResponse response:", registerListingResponse);
+    if (registerListingResponse.status !== 200) {
+      console.error(
+        "Failed to register listing: ",
+        registerListingResponse.data
+      );
+      throw Error("Failed to register listing");
+    }
 
     const activateListingResponse = await activateProductListing(
       listing as string
     );
     console.log("activateListingResponse response:", activateListingResponse);
+    if (activateListingResponse.status !== 200) {
+      console.error(
+        "Failed to activate listing: ",
+        activateListingResponse.data
+      );
+      throw Error("Failed to activate listing");
+    }
 
     const placeProductResponse = await placeProductListing({
       productListingId: listing as string,
@@ -317,17 +343,144 @@ router.post("/verify-and-place", async (req, res, next) => {
       price: Number(price),
     });
     console.log("placeProductResponse response:", placeProductResponse);
+    if (placeProductResponse.status !== 200) {
+      console.error("Failed to place products: ", placeProductResponse.data);
+      throw Error("Failed to place products");
+    }
 
-    const clickcrateId = pos;
-    const blinkUrl = await generateBlinkUrl(clickcrateId as string);
+    const clickcrateId = pos as string;
+    console.log("clickcrateId is:", clickcrateId);
+    const blinkUrl = await generateBlinkUrl(clickcrateId);
+    console.log("blinkUrl response:", blinkUrl);
 
-    const responseBody: ActionPostResponse = {
-      transaction: placeProductResponse.data.transaction,
-      message: `Your product is ready for sale! Share this Blink URL on Twitter to start selling: ${blinkUrl}`,
+    const relayTx = await relayPaymentTransaction(0.001, publicKey, "mainnet");
+    console.log("Initiating verification");
+
+    const paymentTx = Buffer.from(relayTx.serialize()).toString("base64");
+    console.log("Responding with this paymentTx: ", paymentTx);
+
+    // const completedAction: CompletedAction = {
+    //   type: "completed",
+    //   icon: `https://shdw-drive.genesysgo.net/CiJnYeRgNUptSKR4MmsAPn7Zhp6LSv91ncWTuNqDLo7T/horizontalmerchcreatoricon.png`,
+    //   label: "Created!",
+    //   title: "ClickCrate Merch Creator",
+    //   description: `Your product is ready for sale! Share this Blink URL to start selling: ${blinkUrl}`,
+    // };
+
+    // const payload = {
+    //   action: completedAction,
+    // };
+
+    // const headers = createActionHeaders();
+    // console.log("Sending response:", JSON.stringify(payload, null, 2));
+    // res.set(headers).status(200).json(payload);
+
+    const payload = {
+      transaction: paymentTx,
+      message: "Product creation completed successfully!",
+      links: {
+        next: {
+          type: "inline",
+          action: {
+            type: "completed",
+            icon: `https://shdw-drive.genesysgo.net/CiJnYeRgNUptSKR4MmsAPn7Zhp6LSv91ncWTuNqDLo7T/horizontalmerchcreatoricon.png`,
+            label: "Created!",
+            title: "ClickCrate Merch Creator",
+            description: `Your product is ready for sale! Share this Blink URL to start selling: ${blinkUrl}`,
+          },
+        },
+      },
     };
-    res.status(200).json(responseBody);
+    console.log("Sending response:", JSON.stringify(payload, null, 2));
+    // res.set(headers).status(200).json(payload);
+    res.status(200).json(payload);
+
+    // const payload: CompletedAction = {
+    //   type: "completed",
+    //   icon: `https://shdw-drive.genesysgo.net/CiJnYeRgNUptSKR4MmsAPn7Zhp6LSv91ncWTuNqDLo7T/horizontalmerchcreatoricon.png`,
+    //   label: "Created!",
+    //   title: "ClickCrate Merch Creator",
+    //   description: `Your product is ready for sale! Share this Blink URL to start selling: ${blinkUrl}`,
+    // };
+
+    // // const headers = createActionHeaders();
+    // console.log("Sending response:", JSON.stringify(payload, null, 2));
+    // res.set(headers).status(200).json(payload);
+    // res.status(200).json(payload);
   } catch (error) {
     console.error("Error in POST /verify-and-place:", error);
+    next(error);
+  }
+});
+
+router.post("/resend-verification", async (req, res, next) => {
+  console.log("Received data:", req.body);
+  const publicKey = new PublicKey(req.body.account);
+
+  try {
+    const { pos, listing, products, price, account, email } = req.query;
+
+    if (!email || !pos || !listing || !products || !price || !account) {
+      throw new Error("Missing required parameters");
+    }
+
+    const verificationResponse = await initiateVerification(email as string);
+    console.log("Verification re-initiation response:", verificationResponse);
+
+    if (verificationResponse.status !== 200) {
+      throw Error(
+        `Verification failed. Status: ${
+          verificationResponse.status
+        }, Message: ${JSON.stringify(verificationResponse.data)}`
+      );
+    }
+
+    const relayTx = await relayPaymentTransaction(0.001, publicKey, "mainnet");
+    console.log("Initiating verification");
+
+    const paymentTx = Buffer.from(relayTx.serialize()).toString("base64");
+    console.log("Responding with this paymentTx: ", paymentTx);
+
+    const responseBody: ActionPostResponse = {
+      transaction: paymentTx,
+      message: "Verification code resent. Please check your email.",
+      links: {
+        next: {
+          type: "inline",
+          action: {
+            type: "action",
+            icon: `https://shdw-drive.genesysgo.net/CiJnYeRgNUptSKR4MmsAPn7Zhp6LSv91ncWTuNqDLo7T/horizontalmerchcreatoricon.png`,
+            label: "Verify Email",
+            title: "Enter Verification Code",
+            description: `Please enter the 6-digit code sent to: ${email}`,
+            links: {
+              actions: [
+                {
+                  href: `/creator/verify-and-place?pos=${pos}&listing=${listing}&products=${products}&price=${price}&account=${account}&email=${email}`,
+                  label: "Verify and Place Product",
+                  parameters: [
+                    {
+                      name: "code",
+                      label: "6-digit Verification Code",
+                      type: "text",
+                      required: true,
+                    },
+                  ],
+                },
+                {
+                  href: `/creator/resend-verification?pos=${pos}&listing=${listing}&products=${products}&price=${price}&account=${account}&email=${email}`,
+                  label: "Resend Verification Code",
+                },
+              ],
+            },
+          },
+        },
+      },
+    };
+
+    res.status(200).json(responseBody);
+  } catch (error) {
+    console.error("Error in POST /resend-verification:", error);
     next(error);
   }
 });

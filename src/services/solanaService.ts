@@ -106,7 +106,7 @@ async function getRecentBlockhashWithRetry(
 }
 
 const relayPaymentTransaction = async (
-  amount: number, // amount in SOL
+  amount: number,
   fromPubkey: PublicKey,
   network: "devnet" | "mainnet"
 ) => {
