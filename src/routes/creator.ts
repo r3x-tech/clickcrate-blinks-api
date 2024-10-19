@@ -1,6 +1,6 @@
 import express from "express";
 import axios from "axios";
-import { PublicKey } from "@solana/web3.js";
+import { LAMPORTS_PER_SOL, PublicKey } from "@solana/web3.js";
 import {
   ProductInfoSchema,
   ProductTypeSchema,
@@ -33,20 +33,22 @@ import {
 } from "../services/clickcrateApiService";
 
 const router = express.Router();
-// const blinkCorsMiddleware = (
-//   req: express.Request,
-//   res: express.Response,
-//   next: express.NextFunction
-// ) => {
-//   res.set(ACTIONS_CORS_HEADERS_MIDDLEWARE);
-//   if (req.method === "OPTIONS") {
-//     return res.status(200).json({
-//       body: "OK",
-//     });
-//   }
-//   next();
-// };
-// router.use(blinkCorsMiddleware);
+const blinkCorsMiddleware = (
+  req: express.Request,
+  res: express.Response,
+  next: express.NextFunction
+) => {
+  res.set(ACTIONS_CORS_HEADERS_MIDDLEWARE);
+  if (req.method === "OPTIONS") {
+    return res.status(200).json({
+      body: "OK",
+    });
+  }
+  next();
+};
+router.use(blinkCorsMiddleware);
+
+// const headers = createActionHeaders();
 
 // Step 1: Choose product type and provide product info (GET)
 router.get("/", (req, res, next) => {
@@ -205,7 +207,7 @@ router.post("/create-product", async (req, res, next) => {
           type: "inline",
           action: {
             type: "action",
-            icon: "https://shdw-drive.genesysgo.net/CiJnYeRgNUptSKR4MmsAPn7Zhp6LSv91ncWTuNqDLo7T/horizontalmerchcreatoricon.png",
+            icon: `https://shdw-drive.genesysgo.net/CiJnYeRgNUptSKR4MmsAPn7Zhp6LSv91ncWTuNqDLo7T/horizontalmerchcreatoricon.png`,
             label: "Verify Email",
             title: "Enter Verification Code",
             description: `Please enter the 6-digit code sent to: ${email}`,
@@ -276,6 +278,8 @@ router.post("/verify-and-place", async (req, res, next) => {
       throw Error("Missing required parameters");
     }
 
+    const publicKey = new PublicKey(account);
+
     const verificationResponse = await verifyCode(email as string, code);
     console.log("Code verification response:", verificationResponse);
 
@@ -311,19 +315,33 @@ router.post("/verify-and-place", async (req, res, next) => {
 
     const registerListingResponse = await registerProductListing({
       productListingId: listing as string,
-      origin: "ClickCrate",
-      eligiblePlacementType: "digitalreplica",
+      origin: "clickcrate",
+      eligiblePlacementType: "relatedpurchase",
       eligibleProductCategory: "clothing",
       manager: account as string,
-      price: Number(price),
+      price: Math.round(Number(price) * LAMPORTS_PER_SOL),
       orderManager: "clickcrate",
     });
     console.log("registerListingResponse response:", registerListingResponse);
+    if (registerListingResponse.status !== 200) {
+      console.error(
+        "Failed to register listing: ",
+        registerListingResponse.data
+      );
+      throw Error("Failed to register listing");
+    }
 
     const activateListingResponse = await activateProductListing(
       listing as string
     );
     console.log("activateListingResponse response:", activateListingResponse);
+    if (activateListingResponse.status !== 200) {
+      console.error(
+        "Failed to activate listing: ",
+        activateListingResponse.data
+      );
+      throw Error("Failed to activate listing");
+    }
 
     const placeProductResponse = await placeProductListing({
       productListingId: listing as string,
@@ -331,9 +349,15 @@ router.post("/verify-and-place", async (req, res, next) => {
       price: Number(price),
     });
     console.log("placeProductResponse response:", placeProductResponse);
+    if (placeProductResponse.status !== 200) {
+      console.error("Failed to place products: ", placeProductResponse.data);
+      throw Error("Failed to place products");
+    }
 
-    const clickcrateId = pos;
-    const blinkUrl = await generateBlinkUrl(clickcrateId as string);
+    const clickcrateId = pos as string;
+    console.log("clickcrateId is:", clickcrateId);
+    const blinkUrl = await generateBlinkUrl(clickcrateId);
+    console.log("blinkUrl response:", blinkUrl);
 
     const relayTx = await relayPaymentTransaction(0.001, publicKey, "mainnet");
     console.log("Initiating verification");

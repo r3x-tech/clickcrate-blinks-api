@@ -4,7 +4,9 @@ dotenv.config();
 import express, { Express, Request, Response, NextFunction } from "express";
 import cors from "cors";
 import productCreatorRoutes from "./routes/creator";
+import merchRoutes from "./routes/merch";
 import shippingInfoRoutes from "./routes/shipping";
+import storefrontRoutes from "./routes/storefront";
 import { errorHandler } from "./middleware/errorHandler";
 import { ACTIONS_CORS_HEADERS_MIDDLEWARE } from "@solana/actions";
 
@@ -19,13 +21,22 @@ app.use(cors(ACTIONS_CORS_HEADERS_MIDDLEWARE));
 // });
 // app.use(cors());
 // app.options("*", cors());
+// app.use((req: Request, res: Response, next: NextFunction) => {
+//   res.set(ACTIONS_CORS_HEADERS_MIDDLEWARE);
+//   if (req.method === "OPTIONS") {
+//     return res.status(200).json({ body: "OK" });
+//   }
+//   next();
+// });
 
 app.get("/", (req, res) => {
   res.send("Welcome to ClickCrate Actions API!");
 });
 
 app.use("/creator", productCreatorRoutes);
+app.use("/merch", merchRoutes);
 app.use("/shipping", shippingInfoRoutes);
+app.use("/storefront", storefrontRoutes);
 
 app.use(errorHandler);
 

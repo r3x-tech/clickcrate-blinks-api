@@ -22,6 +22,41 @@ export async function generateBlinkUrl(posId: string) {
   }
 }
 
+export async function fetchRegisteredClickcrate(clickcrateId: string) {
+  try {
+    try {
+      new PublicKey(clickcrateId);
+    } catch (error) {
+      console.error("Invalid clickcrateId:", clickcrateId);
+      return {
+        status: 400,
+        data: { error: "Invalid clickcrateId" },
+      };
+    }
+
+    const response = await clickcrateAxios.post("/v1/clickcrate/registered", {
+      clickcrateId,
+    });
+
+    return {
+      status: response.status,
+      data: response.data,
+    };
+  } catch (error) {
+    console.error("Error fetching registered ClickCrate:", error);
+    if (axios.isAxiosError(error)) {
+      return {
+        status: error.response?.status || 500,
+        data: error.response?.data || { error: "Unknown error occurred" },
+      };
+    }
+    return {
+      status: 500,
+      data: { error: "An unexpected error occurred" },
+    };
+  }
+}
+
 export async function registerClickCrate(clickcrateData: {
   clickcrateId: string;
   eligiblePlacementType: string;
@@ -93,6 +128,44 @@ export async function activateClickCrate(clickcrateId: string) {
   }
 }
 
+export async function fetchRegisteredProductListing(productListingId: string) {
+  try {
+    try {
+      new PublicKey(productListingId);
+    } catch (error) {
+      console.error("Invalid productListingId:", productListingId);
+      return {
+        status: 400,
+        data: { error: "Invalid productListingId" },
+      };
+    }
+
+    const response = await clickcrateAxios.post(
+      "/v1/product-listing/registered",
+      {
+        productListingId,
+      }
+    );
+
+    return {
+      status: response.status,
+      data: response.data,
+    };
+  } catch (error) {
+    console.error("Error fetching registered Product Listing:", error);
+    if (axios.isAxiosError(error)) {
+      return {
+        status: error.response?.status || 500,
+        data: error.response?.data || { error: "Unknown error occurred" },
+      };
+    }
+    return {
+      status: 500,
+      data: { error: "An unexpected error occurred" },
+    };
+  }
+}
+
 export async function registerProductListing(productListingData: {
   productListingId: string;
   origin: string;
@@ -103,10 +176,18 @@ export async function registerProductListing(productListingData: {
   orderManager: string;
 }) {
   try {
+    console.log("Registering product listing with data:", productListingData);
+
+    if (!Number.isInteger(productListingData.price)) {
+      throw new Error("Price must be an integer (in lamports)");
+    }
+
     const response = await clickcrateAxios.post(
       "/v1/product-listing/register",
       productListingData
     );
+    console.log("Product listing registration response:", response.data);
+
     return {
       status: response.status,
       data: response.data,
@@ -238,4 +319,53 @@ export async function verifyCode(email: string, code: string) {
       data: { message: "An unexpected error occurred" },
     };
   }
+}
+
+export async function getClickCreatePointOfSale(posId: string) {
+  try {
+    const response = await clickcrateAxios.get(
+      `https://api.clickcrate.xyz/blink/${posId}`,
+      {
+        headers: {
+          Authorization: `Bearer ${process.env.CLICKCRATE_API_KEY}`,
+        },
+      }
+    );
+    return response;
+  } catch (error) {
+    console.error("Error verifying code:", error);
+    if (axios.isAxiosError(error)) {
+      return {
+        status: error.response?.status || 500,
+        data: error.response?.data || { message: "Unknown error occurred" },
+      };
+    }
+    return {
+      status: 500,
+      data: { message: "An unexpected error occurred" },
+    };
+  }
+}
+
+export async function getActionsArr(
+  posArr: string[]
+): Promise<{ href: string; label: string }[]> {
+  const actionsArr: { href: string; label: string }[] = [];
+  await Promise.all(
+    posArr.map(async (pos) => {
+      const response = await getClickCreatePointOfSale(pos);
+      const action = response.data.links.actions[0];
+      const href = action.href;
+      const urlParams = new URLSearchParams(href.split("?")[1]);
+      const queryString = urlParams.toString();
+      const finalHref = `/storefront/input/${pos}?${queryString}`;
+
+      actionsArr.push({
+        href: finalHref,
+        label: response.data.label,
+      });
+    })
+  );
+
+  return actionsArr;
 }
