@@ -1,7 +1,11 @@
 import express from "express";
 import { PublicKey } from "@solana/web3.js";
 import { ShippingDetailsSchema } from "../models/schemas";
-import { ActionGetResponse, ActionPostResponse } from "@solana/actions";
+import {
+  ActionGetResponse,
+  ActionPostResponse,
+  CompletedAction,
+} from "@solana/actions";
 import {
   validateShippingName,
   validateShippingEmail,
@@ -29,6 +33,7 @@ router.get("/", (req, res) => {
       links: {
         actions: [
           {
+            type: "transaction",
             href: `/shipping/create-shipping-info-nft`,
             label: "Mint",
             parameters: [
@@ -135,10 +140,25 @@ router.post("/create-shipping-info-nft", async (req, res) => {
           "mainnet"
         );
 
-      const responseBody: ActionPostResponse = {
-        transaction: Buffer.from(shippingInfoNftTransaction).toString("base64"),
-        message:
+      const completedAction: CompletedAction = {
+        type: "completed",
+        icon: "https://shdw-drive.genesysgo.net/CiJnYeRgNUptSKR4MmsAPn7Zhp6LSv91ncWTuNqDLo7T/autofill_checkout_button_bottom.png",
+        label: "Creation success!",
+        title: "ClickCrate Shipping Autofill",
+        description:
           "Shipping autofill NFT created successfully! Please check your wallet to view your NFT.",
+      };
+
+      const responseBody: ActionPostResponse = {
+        type: "transaction",
+        transaction: Buffer.from(shippingInfoNftTransaction).toString("base64"),
+        message: "",
+        links: {
+          next: {
+            type: "inline",
+            action: completedAction,
+          },
+        },
       };
       res.status(200).json(responseBody);
     } else {

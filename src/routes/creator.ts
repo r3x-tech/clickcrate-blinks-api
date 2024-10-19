@@ -11,6 +11,10 @@ import {
   ActionGetResponse,
   ActionPostResponse,
   ACTIONS_CORS_HEADERS_MIDDLEWARE,
+  CompletedAction,
+  createActionHeaders,
+  LinkedAction,
+  NextActionLink,
 } from "@solana/actions";
 import {
   createProducts,
@@ -57,6 +61,7 @@ router.get("/", (req, res, next) => {
       links: {
         actions: [
           {
+            type: "transaction",
             href: `/creator/create-product`,
             label: "CREATE",
             parameters: [
@@ -191,6 +196,7 @@ router.post("/create-product", async (req, res, next) => {
     console.log("Responding with this paymentTx: ", paymentTx);
 
     const responseBody: ActionPostResponse = {
+      type: "transaction",
       transaction: paymentTx,
       message:
         "Products created. Please check your email for the verification code.",
@@ -206,6 +212,7 @@ router.post("/create-product", async (req, res, next) => {
             links: {
               actions: [
                 {
+                  type: "post",
                   href: `/creator/verify-and-place?pos=${posCollectionAddress}&listing=${listingCollectionAddress}&products=${productAddresses.join(
                     ","
                   )}&price=${unitPrice}&account=${account}&email=${email}`,
@@ -218,7 +225,14 @@ router.post("/create-product", async (req, res, next) => {
                       required: true,
                     },
                   ],
-                },
+                } as LinkedAction,
+                {
+                  type: "post",
+                  href: `/creator/resend-verification?pos=${posCollectionAddress}&listing=${listingCollectionAddress}&products=${productAddresses.join(
+                    ","
+                  )}&price=${unitPrice}&account=${account}&email=${email}`,
+                  label: "Resend Verification Code",
+                } as LinkedAction,
               ],
             },
           },
@@ -321,13 +335,140 @@ router.post("/verify-and-place", async (req, res, next) => {
     const clickcrateId = pos;
     const blinkUrl = await generateBlinkUrl(clickcrateId as string);
 
-    const responseBody: ActionPostResponse = {
-      transaction: placeProductResponse.data.transaction,
-      message: `Your product is ready for sale! Share this Blink URL on Twitter to start selling: ${blinkUrl}`,
+    const relayTx = await relayPaymentTransaction(0.001, publicKey, "mainnet");
+    console.log("Initiating verification");
+
+    const paymentTx = Buffer.from(relayTx.serialize()).toString("base64");
+    console.log("Responding with this paymentTx: ", paymentTx);
+
+    // const completedAction: CompletedAction = {
+    //   type: "completed",
+    //   icon: `https://shdw-drive.genesysgo.net/CiJnYeRgNUptSKR4MmsAPn7Zhp6LSv91ncWTuNqDLo7T/horizontalmerchcreatoricon.png`,
+    //   label: "Created!",
+    //   title: "ClickCrate Merch Creator",
+    //   description: `Your product is ready for sale! Share this Blink URL to start selling: ${blinkUrl}`,
+    // };
+
+    // const payload = {
+    //   action: completedAction,
+    // };
+
+    // const headers = createActionHeaders();
+    // console.log("Sending response:", JSON.stringify(payload, null, 2));
+    // res.set(headers).status(200).json(payload);
+
+    const completedAction: CompletedAction = {
+      type: "completed",
+      icon: "https://shdw-drive.genesysgo.net/CiJnYeRgNUptSKR4MmsAPn7Zhp6LSv91ncWTuNqDLo7T/horizontalmerchcreatoricon.png",
+      label: "Created!",
+      title: "ClickCrate Merch Creator",
+      description: `Your product is ready for sale! Share this Blink URL to start selling: ${blinkUrl}`,
     };
-    res.status(200).json(responseBody);
+
+    const payload: ActionPostResponse = {
+      type: "post",
+      message: "Product creation completed successfully!",
+      links: {
+        next: {
+          type: "inline",
+          action: completedAction,
+        },
+      },
+    };
+
+    console.log("Sending response:", JSON.stringify(payload, null, 2));
+    // res.set(headers).status(200).json(payload);
+    res.status(200).json(payload);
+
+    // const payload: CompletedAction = {
+    //   type: "completed",
+    //   icon: `https://shdw-drive.genesysgo.net/CiJnYeRgNUptSKR4MmsAPn7Zhp6LSv91ncWTuNqDLo7T/horizontalmerchcreatoricon.png`,
+    //   label: "Created!",
+    //   title: "ClickCrate Merch Creator",
+    //   description: `Your product is ready for sale! Share this Blink URL to start selling: ${blinkUrl}`,
+    // };
+
+    // // const headers = createActionHeaders();
+    // console.log("Sending response:", JSON.stringify(payload, null, 2));
+    // res.set(headers).status(200).json(payload);
+    // res.status(200).json(payload);
   } catch (error) {
     console.error("Error in POST /verify-and-place:", error);
+    next(error);
+  }
+});
+
+router.post("/resend-verification", async (req, res, next) => {
+  console.log("Received data:", req.body);
+  const publicKey = new PublicKey(req.body.account);
+
+  try {
+    const { pos, listing, products, price, account, email } = req.query;
+
+    if (!email || !pos || !listing || !products || !price || !account) {
+      throw new Error("Missing required parameters");
+    }
+
+    const verificationResponse = await initiateVerification(email as string);
+    console.log("Verification re-initiation response:", verificationResponse);
+
+    if (verificationResponse.status !== 200) {
+      throw Error(
+        `Verification failed. Status: ${
+          verificationResponse.status
+        }, Message: ${JSON.stringify(verificationResponse.data)}`
+      );
+    }
+
+    const relayTx = await relayPaymentTransaction(0.001, publicKey, "mainnet");
+    console.log("Initiating verification");
+
+    const paymentTx = Buffer.from(relayTx.serialize()).toString("base64");
+    console.log("Responding with this paymentTx: ", paymentTx);
+
+    const responseBody: ActionPostResponse = {
+      type: "transaction",
+      transaction: paymentTx,
+      message: "Verification code resent. Please check your email.",
+      links: {
+        next: {
+          type: "inline",
+          action: {
+            type: "action",
+            icon: "https://shdw-drive.genesysgo.net/CiJnYeRgNUptSKR4MmsAPn7Zhp6LSv91ncWTuNqDLo7T/horizontalmerchcreatoricon.png",
+            label: "Verify Email",
+            title: "Enter Verification Code",
+            description: `Please enter the 6-digit code sent to: ${email}`,
+            links: {
+              actions: [
+                {
+                  type: "post",
+                  href: `/creator/verify-and-place?pos=${pos}&listing=${listing}&products=${products}&price=${price}&account=${account}&email=${email}`,
+                  label: "Verify and Place Product",
+                  parameters: [
+                    {
+                      name: "code",
+                      label: "6-digit Verification Code",
+                      type: "text",
+                      required: true,
+                    },
+                  ],
+                } as LinkedAction,
+                {
+                  type: "post",
+                  href: `/creator/resend-verification?pos=${pos}&listing=${listing}&products=${products}&price=${price}&account=${account}&email=${email}`,
+                  label: "Resend Verification Code",
+                } as LinkedAction,
+              ],
+            },
+          },
+        },
+      },
+    };
+
+    res.status(200).json(responseBody);
+  } catch (error) {
+    console.error("Error in POST /resend-verification:", error);
     next(error);
   }
 });
