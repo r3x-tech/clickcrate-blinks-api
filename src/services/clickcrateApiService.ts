@@ -272,6 +272,118 @@ export async function placeProductListing(placeProductData: {
   }
 }
 
+export async function makePurchase(purchaseData: {
+  productListingId: string;
+  productId: string;
+  clickcrateId: string;
+  size?: string;
+  quantity: number;
+  buyer: string;
+  payer: string;
+  paymentProcessor: "solana" | "stripe";
+  shippingName: string;
+  shippingEmail: string;
+  shippingPhone?: string;
+  shippingAddress: string;
+  shippingCity: string;
+  shippingStateProvince: string;
+  shippingCountryRegion: string;
+  shippingZipCode: string;
+}) {
+  try {
+    const response = await clickcrateAxios.post(
+      "/v1/clickcrate/purchase",
+      purchaseData
+    );
+    return {
+      status: response.status,
+      data: response.data,
+    };
+  } catch (error) {
+    console.error("Error making purchase:", error);
+    if (axios.isAxiosError(error)) {
+      return {
+        status: error.response?.status || 500,
+        data: error.response?.data || { message: "Unknown error occurred" },
+      };
+    }
+    return {
+      status: 500,
+      data: { message: "An unexpected error occurred" },
+    };
+  }
+}
+
+export async function initiatePurchase(purchaseData: {
+  productListingId: string;
+  productId: string;
+  clickcrateId: string;
+  size?: string;
+  quantity: number;
+  buyer: string;
+  payer: string;
+  paymentProcessor: "solana" | "stripe";
+  shippingName: string;
+  shippingEmail: string;
+  shippingPhone?: string;
+  shippingAddress: string;
+  shippingCity: string;
+  shippingStateProvince: string;
+  shippingCountryRegion: string;
+  shippingZipCode: string;
+}) {
+  try {
+    const response = await clickcrateAxios.post(
+      "/blink/purchase",
+      purchaseData
+    );
+    return {
+      status: response.status,
+      data: response.data,
+    };
+  } catch (error) {
+    console.error("Error initiating purchase:", error);
+    if (axios.isAxiosError(error)) {
+      return {
+        status: error.response?.status || 500,
+        data: error.response?.data || { message: "Unknown error occurred" },
+      };
+    }
+    return {
+      status: 500,
+      data: { message: "An unexpected error occurred" },
+    };
+  }
+}
+
+export async function completePurchase(completionData: {
+  clickcrateId: string;
+  transactionId: string;
+}) {
+  try {
+    const response = await clickcrateAxios.post(
+      "/blink/complete",
+      completionData
+    );
+    return {
+      status: response.status,
+      data: response.data,
+    };
+  } catch (error) {
+    console.error("Error completing purchase:", error);
+    if (axios.isAxiosError(error)) {
+      return {
+        status: error.response?.status || 500,
+        data: error.response?.data || { message: "Unknown error occurred" },
+      };
+    }
+    return {
+      status: 500,
+      data: { message: "An unexpected error occurred" },
+    };
+  }
+}
+
 export async function initiateVerification(email: string) {
   try {
     const response = await clickcrateAxios.post("/v1/initiate-verification", {
