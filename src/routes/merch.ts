@@ -18,6 +18,7 @@ import {
   fetchRegisteredClickcrate,
   initiatePurchase,
   completePurchase,
+  makeBlinkPurchase,
 } from "../services/clickcrateApiService";
 import { fetchDasCoreCollection } from "../services/metaplexService";
 import { parseSizes } from "../utils/conversions";
@@ -265,37 +266,148 @@ router.post("/purchase", async (req, res, next) => {
     }
 
     const publicKey = new PublicKey(account);
-    const relayTx = await relayPaymentTransaction(0.001, publicKey, "mainnet");
-    console.log("Initiating verification");
+    // const relayTx = await relayPaymentTransaction(0.001, publicKey, "mainnet");
+    // console.log("Initiating verification");
 
-    const paymentTx = Buffer.from(relayTx.serialize()).toString("base64");
-    console.log("Responding with this paymentTx: ", paymentTx);
+    // const paymentTx = Buffer.from(relayTx.serialize()).toString("base64");
+    // console.log("Responding with this paymentTx: ", paymentTx);
 
-    // const purchaseData = {
-    //   productListingId: productListingId as string,
-    //   productId: productId as string,
-    //   clickcrateId: clickcrateId as string,
-    //   size,
-    //   quantity: 1,
-    //   buyer: publicKey.toString(),
-    //   payer: publicKey.toString(),
-    //   paymentProcessor: "solana" as "solana" | "stripe",
-    //   shippingName: buyerName,
-    //   shippingEmail,
-    //   shippingAddress,
-    //   shippingCity,
-    //   shippingStateProvince,
-    //   shippingCountryRegion,
-    //   shippingZipCode,
-    // };
+    const purchaseData = {
+      clickcrateId: clickcrateId as string,
+      size,
+      quantity: 1,
+      buyer: publicKey.toString(),
+      payer: publicKey.toString(),
+      paymentProcessor: "solana" as "solana" | "stripe",
+      shippingName: buyerName,
+      shippingEmail,
+      shippingAddress,
+      shippingCity,
+      shippingStateProvince,
+      shippingCountryRegion,
+      shippingZipCode,
+    };
 
-    // const result = await initiatePurchase(purchaseData);
+    const result = await makeBlinkPurchase(purchaseData);
 
-    // if (result.status !== 200) {
-    //   throw new Error(`Purchase initiation failed: ${result.data.message}`);
-    // }
+    if (result.status !== 200) {
+      throw new Error(`Purchase initiation failed: ${result.data.message}`);
+    }
 
-    // const paymentTx = result.data.transaction;
+    const paymentTx = result.data.transaction;
+
+    const payload: ActionPostResponse = {
+      type: "transaction",
+      transaction: paymentTx,
+      message: `Your purchase of ${productName} is confirmed. Order confirmation emailed to: ${shippingEmail}`,
+      links: {
+        next: {
+          type: "inline",
+          action: {
+            type: "completed",
+            icon: `${productIcon}`,
+            title: `Order Confirmed`,
+            description: `Your purchase of ${productName} is confirmed! An order confirmation has been emailed to: ${shippingEmail}`,
+            label: `Purchase Complete`,
+          },
+        },
+      },
+    };
+
+    console.log("Sending response:", JSON.stringify(payload, null, 2));
+    res.status(200).json(payload);
+  } catch (error) {
+    console.error("Error in POST /purchase:", error);
+    res
+      .status(400)
+      .set(ACTIONS_CORS_HEADERS_MIDDLEWARE)
+      .json({ message: "Failed to purchase" });
+  }
+});
+
+router.post("/chained/purchase", async (req, res, next) => {
+  try {
+    const { account } = req.body;
+    const {
+      size,
+      buyerName,
+      shippingEmail,
+      shippingAddress,
+      shippingCity,
+      shippingStateProvince,
+      shippingCountryRegion,
+      shippingZipCode,
+    } = req.body.data;
+
+    const {
+      clickcrateId,
+      productName,
+      productSizes,
+      productDescription,
+      productIcon,
+    } = req.query;
+    console.log("req.query: ", req.query);
+
+    if (!account) {
+      console.error("Missing account: ", account);
+      throw Error("Missing required parameters");
+    }
+
+    if (
+      !clickcrateId ||
+      !productName ||
+      !productSizes ||
+      !productDescription ||
+      !productIcon
+    ) {
+      console.error("Missing query parameters in purchase!!!");
+      throw Error("Missing required parameters");
+    }
+
+    if (
+      !size ||
+      !buyerName ||
+      !shippingEmail ||
+      !shippingAddress ||
+      !shippingCity ||
+      !shippingStateProvince ||
+      !shippingCountryRegion ||
+      !shippingZipCode
+    ) {
+      console.error("Missing body parameters in purchase!!!");
+      throw Error("Missing required parameters");
+    }
+
+    const publicKey = new PublicKey(account);
+    // const relayTx = await relayPaymentTransaction(0.001, publicKey, "mainnet");
+    // console.log("Initiating verification");
+
+    // const paymentTx = Buffer.from(relayTx.serialize()).toString("base64");
+    // console.log("Responding with this paymentTx: ", paymentTx);
+
+    const purchaseData = {
+      clickcrateId: clickcrateId as string,
+      size,
+      quantity: 1,
+      buyer: publicKey.toString(),
+      payer: publicKey.toString(),
+      paymentProcessor: "solana" as "solana" | "stripe",
+      shippingName: buyerName,
+      shippingEmail,
+      shippingAddress,
+      shippingCity,
+      shippingStateProvince,
+      shippingCountryRegion,
+      shippingZipCode,
+    };
+
+    const result = await initiatePurchase(purchaseData);
+
+    if (result.status !== 200) {
+      throw new Error(`Purchase initiation failed: ${result.data.message}`);
+    }
+
+    const paymentTx = result.data.transaction;
 
     const payload: ActionPostResponse = {
       type: "transaction",
@@ -317,13 +429,13 @@ router.post("/purchase", async (req, res, next) => {
             title: `Please confirm the following is correct!`,
             description: `\nEmail: ${shippingEmail}
             \nShipping Info:\n${buyerName}\n${shippingAddress} ${shippingCity}, ${shippingStateProvince} ${shippingZipCode}\n${shippingCountryRegion}\n`,
-            label: `Confirm`,
+            label: `Confirm Order`,
             links: {
               actions: [
                 {
-                  type: "message",
+                  type: "post",
                   href: `/merch/completed?${productName}&${productIcon}&${shippingEmail}`,
-                  label: "Confirm",
+                  // label: "Confirm",
                 } as LinkedAction,
               ],
             },
@@ -343,7 +455,7 @@ router.post("/purchase", async (req, res, next) => {
   }
 });
 
-router.post("/completed", async (req, res, next) => {
+router.post("/chained/completed", async (req, res, next) => {
   try {
     console.log("completed req.body: ", req.body);
     console.log("completed req.body.data: ", req.body.data);
