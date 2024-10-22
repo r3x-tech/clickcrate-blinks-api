@@ -7,6 +7,7 @@ import productCreatorRoutes from "./routes/creator";
 import merchRoutes from "./routes/merch";
 import shippingInfoRoutes from "./routes/shipping";
 import storefrontRoutes from "./routes/storefront";
+import lotusRoutes from "./routes/lotus";
 import { errorHandler } from "./middleware/errorHandler";
 import { ACTIONS_CORS_HEADERS_MIDDLEWARE } from "@solana/actions";
 
@@ -37,6 +38,7 @@ app.use("/creator", productCreatorRoutes);
 app.use("/merch", merchRoutes);
 app.use("/shipping", shippingInfoRoutes);
 app.use("/storefront", storefrontRoutes);
+app.use("/lotus", lotusRoutes);
 
 app.use(errorHandler);
 
