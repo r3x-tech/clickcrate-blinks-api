@@ -163,17 +163,17 @@ router.post("/quiz-purchase", async (req, res, next) => {
 
     let clickcrateId = ``;
     if (selectedFlower == "1" && selectedProductType == "elixir") {
-      clickcrateId = `46tdrYMQyvwWCcNePL8F6dm3siit7ttW7V2m1bDnPTZP`;
+      clickcrateId = `8F36dwsrp699v9L4an18fwj1ssa2c9atFSXTNAeK1wmP`;
     } else if (selectedFlower == "1" && selectedProductType == "mist") {
-      clickcrateId = `46tdrYMQyvwWCcNePL8F6dm3siit7ttW7V2m1bDnPTZP`;
+      clickcrateId = `5vdMNH3rL8AmhGro3K4KgeuPW9rXmvMrTQCXaMGZGHdH`;
     } else if (selectedFlower == "2" && selectedProductType == "elixir") {
-      clickcrateId = `46tdrYMQyvwWCcNePL8F6dm3siit7ttW7V2m1bDnPTZP`;
+      clickcrateId = `9UFxxerNWUZJu8uY5qH2ndBKXk8z29ps3j9rntYih75Z`;
     } else if (selectedFlower == "2" && selectedProductType == "mist") {
-      clickcrateId = `46tdrYMQyvwWCcNePL8F6dm3siit7ttW7V2m1bDnPTZP`;
+      clickcrateId = `3U8ysdy3WWkH4RVqYzoQaDgt2U7CdC3WVNbBrJjQVNt4`;
     } else if (selectedFlower == "3" && selectedProductType == "elixir") {
-      clickcrateId = `46tdrYMQyvwWCcNePL8F6dm3siit7ttW7V2m1bDnPTZP`;
+      clickcrateId = `HywrM8Vjbb4EutuR5fCiF2cW7cbrwJGgDDX8FtymeFhv`;
     } else if (selectedFlower == "3" && selectedProductType == "mist") {
-      clickcrateId = `46tdrYMQyvwWCcNePL8F6dm3siit7ttW7V2m1bDnPTZP`;
+      clickcrateId = `Cod2wpgXS7A1r4zA1xvqse4byaVyApo6gvDu3UF1TzKW`;
     }
 
     if (clickcrateId === ``) {
@@ -316,11 +316,11 @@ router.post("/quiz-purchase", async (req, res, next) => {
                     },
                   ],
                 },
-                {
-                  type: "external-link",
-                  href: `https://www.lotuswei.com/`,
-                  label: "LOTUSWEI WEBSITE",
-                } as LinkedAction,
+                // {
+                //   type: "external-link",
+                //   href: `https://www.lotuswei.com/`,
+                //   label: "LOTUSWEI WEBSITE",
+                // } as LinkedAction,
               ],
             },
           },
