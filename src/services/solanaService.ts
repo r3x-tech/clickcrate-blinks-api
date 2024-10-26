@@ -22,6 +22,7 @@ import {
   signTransaction,
 } from "@metaplex-foundation/umi";
 import { base58 } from "@metaplex-foundation/umi/serializers";
+import axios from "axios";
 
 require("dotenv").config();
 
@@ -464,11 +465,24 @@ async function createProducts(
   };
 }
 
+const getCoinGeckoSolUsdPrice = async (): Promise<number> => {
+  try {
+    const response = await axios.get(
+      "https://api.coingecko.com/api/v3/simple/price?ids=solana&vs_currencies=usd"
+    );
+    return response.data.solana.usd;
+  } catch (error) {
+    console.error("Error fetching SOL price from CoinGecko:", error);
+    throw error;
+  }
+};
+
 export {
   createConnection,
-  simulateAndGetCost,
   getRecentBlockhashWithRetry,
-  createTransaction,
-  createProducts,
   relayPaymentTransaction,
+  createTransaction,
+  simulateAndGetCost,
+  createProducts,
+  getCoinGeckoSolUsdPrice,
 };
