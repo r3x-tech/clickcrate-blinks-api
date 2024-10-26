@@ -369,19 +369,20 @@ router.post("/purchase", async (req, res, next) => {
                       // },
                       {
                         name: "cardNumber",
-                        // label: "Card Number (1234 1234 1234 1234)",
-                        label: "1234 1234 1234 1234",
+                        label: "Card Number (1234 1234 1234 1234)",
+                        // label: "1234 1234 1234 1234",
                         required: true,
                         type: "text",
-                        // Accepts digits with optional spaces or dashes between groups
-                        pattern:
-                          "^([0-9]{4}[s-]?){3}[0-9]{4}$|^([0-9]{4}[s-]?){2}[0-9]{6}$",
-                        // patternDescription: "Please enter a valid 16-digit card number. You can add spaces between groups of numbers."
+                        pattern: "^[0-9]{4} [0-9]{4} [0-9]{4} [0-9]{4}$",
+                        // pattern:
+                        //   "^([0-9]{4}[s-]?){3}[0-9]{4}$|^([0-9]{4}[s-]?){2}[0-9]{6}$",
+                        // patternDescription:
+                        //   "Please enter a valid 16-digit card number with spaces",
                       },
                       {
                         name: "expiration",
-                        // label: "Expiration Date (MM/YY)",
-                        label: "MM/YY",
+                        label: "Expiration Date (MM/YY)",
+                        // label: "MM/YY",
                         required: true,
                         type: "text",
                         pattern: "^(0[1-9]|1[0-2])/([0-9]{2})$",
