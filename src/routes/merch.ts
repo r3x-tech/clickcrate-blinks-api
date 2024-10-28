@@ -170,13 +170,13 @@ router.get("/:clickcrateId", async (req, res, next) => {
                 type: "select",
                 options: productSizes,
               },
-              {
-                name: "paymentProcessor",
-                label: "Select a payment method",
-                required: true,
-                type: "select",
-                options: paymentProcessors,
-              },
+              // {
+              //   name: "paymentProcessor",
+              //   label: "Select a payment method",
+              //   required: true,
+              //   type: "select",
+              //   options: paymentProcessors,
+              // },
               {
                 name: "buyerName",
                 label: "First & Last name",
@@ -237,7 +237,7 @@ router.post("/purchase", async (req, res, next) => {
     const { account } = req.body;
     const {
       size,
-      paymentProcessor,
+      // paymentProcessor,
       buyerName,
       shippingEmail,
       shippingAddress,
@@ -274,7 +274,7 @@ router.post("/purchase", async (req, res, next) => {
 
     if (
       !size ||
-      !paymentProcessor ||
+      // !paymentProcessor ||
       !buyerName ||
       !shippingEmail ||
       !shippingAddress ||
@@ -300,8 +300,8 @@ router.post("/purchase", async (req, res, next) => {
       quantity: 1,
       buyer: publicKey.toString(),
       payer: publicKey.toString(),
-      // paymentProcessor: "solana" as "solana" | "stripe",
-      paymentProcessor: paymentProcessor as "solana" | "stripe",
+      paymentProcessor: "solana" as "solana" | "stripe",
+      // paymentProcessor: paymentProcessor as "solana" | "stripe",
       shippingName: buyerName,
       shippingEmail,
       shippingAddress,
@@ -328,159 +328,185 @@ router.post("/purchase", async (req, res, next) => {
       },
     };
 
-    if (paymentProcessor === "stripe") {
-      payload = {
-        type: "post",
-        // message: `Your purchase of ${productName} is confirmed. Order confirmation emailed to: ${shippingEmail}`,
-        links: {
-          next: {
-            type: "inline",
-            action: {
-              type: "action",
-              icon: `${productIcon}`,
-              label: `Payment Details`,
-              // title: `${productName}`,
-              title: `Payment Details`,
-              description: `Please enter your card information`,
-              links: {
-                actions: [
-                  {
-                    type: "post",
-                    href: `/storefront/web2-purchase?clickcrateId=${clickcrateId}&productName=${productName}&productSizes=${productSizes}&productIcon=${productIcon}&productDescription=${productDescription}&size=${size}&paymentProcessor${paymentProcessor}&buyerName=${buyerName}&shippingEmail=${shippingEmail}&shippingAddress=${shippingAddress}&shippingCity=${shippingCity}&shippingStateProvince=${shippingStateProvince}&shippingCountryRegion=${shippingCountryRegion}&shippingZipCode=${shippingZipCode}`,
-                    label: "Complete Purchase",
-                    parameters: [
-                      // {
-                      //   name: "cardholderName",
-                      //   label: "Cardholder Name",
-                      //   required: true,
-                      //   type: "text",
-                      // },
-                      // {
-                      //   name: "sameName",
-                      //   label: "Cardholder name same as shipping name?",
-                      //   type: "checkbox",
-                      //   options: [
-                      //     {
-                      //       label: `Yes, use shipping name ${buyerName}`,
-                      //       value: "true",
-                      //       selected: false,
-                      //     },
-                      //   ],
-                      // },
-                      {
-                        name: "cardNumber",
-                        label: "Card Number (1234 1234 1234 1234)",
-                        // label: "1234 1234 1234 1234",
-                        required: true,
-                        type: "text",
-                        pattern: "^[0-9]{4} [0-9]{4} [0-9]{4} [0-9]{4}$",
-                        // pattern:
-                        //   "^([0-9]{4}[s-]?){3}[0-9]{4}$|^([0-9]{4}[s-]?){2}[0-9]{6}$",
-                        // patternDescription:
-                        //   "Please enter a valid 16-digit card number with spaces",
-                      },
-                      {
-                        name: "expiration",
-                        label: "Expiration Date (MM/YY)",
-                        // label: "MM/YY",
-                        required: true,
-                        type: "text",
-                        pattern: "^(0[1-9]|1[0-2])/([0-9]{2})$",
-                        // patternDescription:
-                        //   "Please enter a valid expiration date in MM/YY format (e.g., 05/25)",
-                      },
-                      // {
-                      //   name: "expirationMonth",
-                      //   label: "Expiration Month",
-                      //   required: true,
-                      //   type: "select",
-                      //   options: [
-                      //     { label: "01 - January", value: "01" },
-                      //     { label: "02 - February", value: "02" },
-                      //     { label: "03 - March", value: "03" },
-                      //     { label: "04 - April", value: "04" },
-                      //     { label: "05 - May", value: "05" },
-                      //     { label: "06 - June", value: "06" },
-                      //     { label: "07 - July", value: "07" },
-                      //     { label: "08 - August", value: "08" },
-                      //     { label: "09 - September", value: "09" },
-                      //     { label: "10 - October", value: "10" },
-                      //     { label: "11 - November", value: "11" },
-                      //     { label: "12 - December", value: "12" },
-                      //   ],
-                      // },
-                      // {
-                      //   name: "expirationYear",
-                      //   label: "Expiration Year",
-                      //   required: true,
-                      //   type: "select",
-                      //   options: [
-                      //     { label: "2024", value: "24" },
-                      //     { label: "2025", value: "25" },
-                      //     { label: "2026", value: "26" },
-                      //     { label: "2027", value: "27" },
-                      //     { label: "2028", value: "28" },
-                      //     { label: "2029", value: "29" },
-                      //     { label: "2030", value: "30" },
-                      //   ],
-                      // },
-                      {
-                        name: "cvc",
-                        label: "CVC",
-                        required: true,
-                        type: "text",
-                      },
-                      {
-                        name: "billingAddress",
-                        label: "Billing address is same as shipping?",
-                        type: "checkbox",
-                        options: [
-                          {
-                            label: `Yes, it is ${buyerName} ${shippingAddress} ${shippingCity}, ${shippingStateProvince} ${shippingCountryRegion} ${shippingZipCode}`,
-                            value: "true",
-                            selected: true,
-                          },
-                        ],
-                      },
-                    ],
-                  } as LinkedAction,
-                ],
-              },
-            },
-          },
-        },
-      };
-    } else {
-      const result = await makeBlinkPurchase(purchaseData);
+    // if (paymentProcessor === "stripe") {
+    //   payload = {
+    //     type: "post",
+    //     // message: `Your purchase of ${productName} is confirmed. Order confirmation emailed to: ${shippingEmail}`,
+    //     links: {
+    //       next: {
+    //         type: "inline",
+    //         action: {
+    //           type: "action",
+    //           icon: `${productIcon}`,
+    //           label: `Payment Details`,
+    //           // title: `${productName}`,
+    //           title: `Payment Details`,
+    //           description: `Please enter your card information`,
+    //           links: {
+    //             actions: [
+    //               {
+    //                 type: "post",
+    //                 href: `/storefront/web2-purchase?clickcrateId=${clickcrateId}&productName=${productName}&productSizes=${productSizes}&productIcon=${productIcon}&productDescription=${productDescription}&size=${size}&paymentProcessor${paymentProcessor}&buyerName=${buyerName}&shippingEmail=${shippingEmail}&shippingAddress=${shippingAddress}&shippingCity=${shippingCity}&shippingStateProvince=${shippingStateProvince}&shippingCountryRegion=${shippingCountryRegion}&shippingZipCode=${shippingZipCode}`,
+    //                 label: "Complete Purchase",
+    //                 parameters: [
+    //                   // {
+    //                   //   name: "cardholderName",
+    //                   //   label: "Cardholder Name",
+    //                   //   required: true,
+    //                   //   type: "text",
+    //                   // },
+    //                   // {
+    //                   //   name: "sameName",
+    //                   //   label: "Cardholder name same as shipping name?",
+    //                   //   type: "checkbox",
+    //                   //   options: [
+    //                   //     {
+    //                   //       label: `Yes, use shipping name ${buyerName}`,
+    //                   //       value: "true",
+    //                   //       selected: false,
+    //                   //     },
+    //                   //   ],
+    //                   // },
+    //                   {
+    //                     name: "cardNumber",
+    //                     label: "Card Number (1234 1234 1234 1234)",
+    //                     // label: "1234 1234 1234 1234",
+    //                     required: true,
+    //                     type: "text",
+    //                     pattern: "^[0-9]{4} [0-9]{4} [0-9]{4} [0-9]{4}$",
+    //                     // pattern:
+    //                     //   "^([0-9]{4}[s-]?){3}[0-9]{4}$|^([0-9]{4}[s-]?){2}[0-9]{6}$",
+    //                     // patternDescription:
+    //                     //   "Please enter a valid 16-digit card number with spaces",
+    //                   },
+    //                   {
+    //                     name: "expiration",
+    //                     label: "Expiration Date (MM/YY)",
+    //                     // label: "MM/YY",
+    //                     required: true,
+    //                     type: "text",
+    //                     pattern: "^(0[1-9]|1[0-2])/([0-9]{2})$",
+    //                     // patternDescription:
+    //                     //   "Please enter a valid expiration date in MM/YY format (e.g., 05/25)",
+    //                   },
+    //                   // {
+    //                   //   name: "expirationMonth",
+    //                   //   label: "Expiration Month",
+    //                   //   required: true,
+    //                   //   type: "select",
+    //                   //   options: [
+    //                   //     { label: "01 - January", value: "01" },
+    //                   //     { label: "02 - February", value: "02" },
+    //                   //     { label: "03 - March", value: "03" },
+    //                   //     { label: "04 - April", value: "04" },
+    //                   //     { label: "05 - May", value: "05" },
+    //                   //     { label: "06 - June", value: "06" },
+    //                   //     { label: "07 - July", value: "07" },
+    //                   //     { label: "08 - August", value: "08" },
+    //                   //     { label: "09 - September", value: "09" },
+    //                   //     { label: "10 - October", value: "10" },
+    //                   //     { label: "11 - November", value: "11" },
+    //                   //     { label: "12 - December", value: "12" },
+    //                   //   ],
+    //                   // },
+    //                   // {
+    //                   //   name: "expirationYear",
+    //                   //   label: "Expiration Year",
+    //                   //   required: true,
+    //                   //   type: "select",
+    //                   //   options: [
+    //                   //     { label: "2024", value: "24" },
+    //                   //     { label: "2025", value: "25" },
+    //                   //     { label: "2026", value: "26" },
+    //                   //     { label: "2027", value: "27" },
+    //                   //     { label: "2028", value: "28" },
+    //                   //     { label: "2029", value: "29" },
+    //                   //     { label: "2030", value: "30" },
+    //                   //   ],
+    //                   // },
+    //                   {
+    //                     name: "cvc",
+    //                     label: "CVC",
+    //                     required: true,
+    //                     type: "text",
+    //                   },
+    //                   {
+    //                     name: "billingAddress",
+    //                     label: "Billing address is same as shipping?",
+    //                     type: "checkbox",
+    //                     options: [
+    //                       {
+    //                         label: `Yes, it is ${buyerName} ${shippingAddress} ${shippingCity}, ${shippingStateProvince} ${shippingCountryRegion} ${shippingZipCode}`,
+    //                         value: "true",
+    //                         selected: true,
+    //                       },
+    //                     ],
+    //                   },
+    //                 ],
+    //               } as LinkedAction,
+    //             ],
+    //           },
+    //         },
+    //       },
+    //     },
+    //   };
+    // } else {
+    //   const result = await makeBlinkPurchase(purchaseData);
 
-      if (result.status !== 200) {
-        throw new Error(`Purchase initiation failed: ${result.data.message}`);
-      }
+    //   if (result.status !== 200) {
+    //     throw new Error(`Purchase initiation failed: ${result.data.message}`);
+    //   }
 
-      const paymentTx = result.data.transaction;
+    //   const paymentTx = result.data.transaction;
 
-      payload = {
-        type: "transaction",
-        transaction: paymentTx,
-        message: `Your purchase of ${productName} is confirmed. Order confirmation emailed to: ${shippingEmail}`,
-        links: {
-          next: {
-            type: "inline",
-            action: {
-              type: "completed",
-              icon: `${productIcon}`,
-              title: `Order Confirmed`,
-              description: `Your purchase of ${productName} is confirmed! An order confirmation has been emailed to: ${shippingEmail}`,
-              label: `Purchase Complete`,
-            },
-          },
-        },
-      };
+    //   payload = {
+    //     type: "transaction",
+    //     transaction: paymentTx,
+    //     message: `Your purchase of ${productName} is confirmed. Order confirmation emailed to: ${shippingEmail}`,
+    //     links: {
+    //       next: {
+    //         type: "inline",
+    //         action: {
+    //           type: "completed",
+    //           icon: `${productIcon}`,
+    //           title: `Order Confirmed`,
+    //           description: `Your purchase of ${productName} is confirmed! An order confirmation has been emailed to: ${shippingEmail}`,
+    //           label: `Purchase Complete`,
+    //         },
+    //       },
+    //     },
+    //   };
+    // }
+
+    const result = await makeBlinkPurchase(purchaseData);
+
+    if (result.status !== 200) {
+      throw new Error(`Purchase initiation failed: ${result.data.message}`);
     }
 
-    // if (paymentTx.trim() === '') {
-    //   throw new Error(`Payment tx `);
-    // }
+    const paymentTx = result.data.transaction;
+
+    payload = {
+      type: "transaction",
+      transaction: paymentTx,
+      message: `Your purchase of ${productName} is confirmed. Order confirmation emailed to: ${shippingEmail}`,
+      links: {
+        next: {
+          type: "inline",
+          action: {
+            type: "completed",
+            icon: `${productIcon}`,
+            title: `Order Confirmed`,
+            description: `Your purchase of ${productName} is confirmed! An order confirmation has been emailed to: ${shippingEmail}`,
+            label: `Purchase Complete`,
+          },
+        },
+      },
+    };
+
+    if (paymentTx.trim() === "") {
+      throw new Error(`Payment tx `);
+    }
 
     console.log("Sending response:", JSON.stringify(payload, null, 2));
     res.status(200).json(payload);
@@ -559,8 +585,8 @@ router.post("/web2-purchase", async (req, res, next) => {
       quantity: 1,
       buyer: publicKey.toString(),
       payer: publicKey.toString(),
-      // paymentProcessor: "solana" as "solana" | "stripe",
-      paymentProcessor: paymentProcessor as "solana" | "stripe",
+      paymentProcessor: "solana" as "solana" | "stripe",
+      // paymentProcessor: paymentProcessor as "solana" | "stripe",
       shippingName: buyerName as string,
       shippingEmail: shippingEmail as string,
       shippingAddress: shippingAddress as string,
@@ -570,7 +596,12 @@ router.post("/web2-purchase", async (req, res, next) => {
       shippingZipCode: shippingAddress as string,
     };
 
-    // const result = await makeStripePurchase(purchaseData);
+    const cardDetails = {
+      cardNumber,
+      expiration,
+      cvc,
+    };
+    // const result = await makeStripePurchase(purchaseData, cardDetails);
 
     // if (result.status !== 200) {
     //   throw new Error(`Failed to make stripe purchase: ${result.data.message}`);
