@@ -257,9 +257,9 @@ router.post("/quiz-purchase", async (req, res, next) => {
             title: `${productListingAsset.content.metadata.name}`,
             description: `${
               productSizeAttr?.value || "N/A"
-            } | Worldwide Shipping
+            } - Worldwide Shipping
               \n${productListingAsset.content.metadata.description}
-              \nOrder confirmations and updates will be sent to your provided email address. To avoid delays ensure all information is correct.
+              \nOrder confirmation & updates will be sent to the email provided. To avoid delays, ensure all information is correct.
               \nNeed help? Send us an email at hello@lotuswei.com`,
             disabled: disable,
             links: {
@@ -269,13 +269,13 @@ router.post("/quiz-purchase", async (req, res, next) => {
                   href: `/merch/purchase?clickcrateId=${clickcrateId}&size=${productSizeAttr?.value}&productName=${productListingAsset.content.metadata.name}&productSizes=${productSizeAttr?.value}&productIcon=${icon}&productDescription=${productListingAsset.content.metadata.description}`,
                   label: `${buttonText}`,
                   parameters: [
-                    {
-                      name: "size",
-                      label: "Select a size",
-                      required: true,
-                      type: "select",
-                      options: productSizes,
-                    },
+                    // {
+                    //   name: "size",
+                    //   label: "Select a size",
+                    //   required: true,
+                    //   type: "select",
+                    //   options: productSizes,
+                    // },
                     {
                       name: "buyerName",
                       label: "First & Last name",
