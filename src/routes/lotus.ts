@@ -266,7 +266,7 @@ router.post("/quiz-purchase", async (req, res, next) => {
               actions: [
                 {
                   type: "transaction",
-                  href: `/merch/purchase?clickcrateId=${clickcrateId}&size=${productSizeAttr?.value}&productName=${productListingAsset.content.metadata.name}&productSizes=${productSizeAttr?.value}&productIcon=${icon}&productDescription=${productListingAsset.content.metadata.description}`,
+                  href: `/lotus/purchase?clickcrateId=${clickcrateId}&size=${productSizeAttr?.value}&productName=${productListingAsset.content.metadata.name}&productSizes=${productSizeAttr?.value}&productIcon=${icon}&productDescription=${productListingAsset.content.metadata.description}`,
                   label: `${buttonText}`,
                   parameters: [
                     // {

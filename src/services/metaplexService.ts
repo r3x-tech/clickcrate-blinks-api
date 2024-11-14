@@ -51,11 +51,12 @@ const createUmiUploader = (network: "devnet" | "mainnet") => {
   return createUmi(solanaConnection).use(mplCore()).use(irysUploader());
 };
 
-const createUmiFetcher = (network: "devnet" | "mainnet") => {
+const createUmiFetcher = (network: "devnet" | "mainnet", endpoint?: string) => {
   const rpcUrl =
-    network === "devnet"
+    endpoint ||
+    (network === "devnet"
       ? process.env.SOLANA_DEVNET_RPC_URL
-      : process.env.SOLANA_MAINNET_RPC_URL;
+      : process.env.SOLANA_MAINNET_RPC_URL);
   const solanaConnection = new Connection(rpcUrl!, "confirmed");
   return createUmi(solanaConnection).use(dasApi());
 };
@@ -403,15 +404,45 @@ export const fetchDasCoreCollection = async (
   collectionAddress: string,
   network: "devnet" | "mainnet"
 ): Promise<CollectionResult> => {
-  const umi = createUmiFetcher(network);
-  const collection = publicKey(collectionAddress);
-  try {
-    const collectionasset = await das.getCollection(umi, collection);
-    return collectionasset;
-  } catch (error) {
-    console.error("Error fetching das collection:", error);
-    throw error;
+  const MAX_RETRIES = 3;
+  const INITIAL_DELAY = 1000;
+
+  // Multiple RPC endpoints
+  const rpcEndpoints = {
+    devnet: [
+      `${process.env.SOLANA_DEVNET_RPC_URL}`,
+      "https://api.devnet.solana.com",
+    ],
+    mainnet: [
+      `${process.env.SOLANA_MAINNET_RPC_URL}`,
+      "https://api.mainnet-beta.solana.com",
+    ],
+  };
+
+  for (const endpoint of rpcEndpoints[network]) {
+    let attempt = 0;
+    while (attempt < MAX_RETRIES) {
+      try {
+        const umi = createUmiFetcher(network, endpoint);
+        const collection = publicKey(collectionAddress);
+        return await das.getCollection(umi, collection);
+      } catch (error) {
+        attempt++;
+        console.error(
+          `Attempt ${attempt} with endpoint ${endpoint} failed:`,
+          error
+        );
+
+        if (attempt === MAX_RETRIES) break; // Try next endpoint
+
+        await new Promise((r) =>
+          setTimeout(r, INITIAL_DELAY * Math.pow(2, attempt))
+        );
+      }
+    }
   }
+
+  throw new Error("All RPC endpoints failed to fetch DAS collection");
 };
 
 export async function signAndSendMetaplexTransaction(
