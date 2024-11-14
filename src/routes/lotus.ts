@@ -97,11 +97,11 @@ router.post("/quiz-product-type", async (req, res, next) => {
       throw Error("Missing required parameters");
     }
 
-    let actionIcon = `https://shdw-drive.genesysgo.net/B9pU9YFo1JFGS7HY1jFi2Fq3yQgnFXodDV1ZJkBQRZ4H/sacred_heart_elixir_or_mist.svg`;
+    let actionIcon = `https://shdw-drive.genesysgo.net/B9pU9YFo1JFGS7HY1jFi2Fq3yQgnFXodDV1ZJkBQRZ4H/sacred_body_elixir_or_mist.svg`;
     if (selectedFlower == "2") {
-      actionIcon = `https://shdw-drive.genesysgo.net/B9pU9YFo1JFGS7HY1jFi2Fq3yQgnFXodDV1ZJkBQRZ4H/sacred_awareness_elixir_or_mist.svg`;
+      actionIcon = `https://shdw-drive.genesysgo.net/B9pU9YFo1JFGS7HY1jFi2Fq3yQgnFXodDV1ZJkBQRZ4H/sacred_heart_elixir_or_mist.svg`;
     } else if (selectedFlower == "3") {
-      actionIcon = `https://shdw-drive.genesysgo.net/B9pU9YFo1JFGS7HY1jFi2Fq3yQgnFXodDV1ZJkBQRZ4H/sacred_body_elixir_or_mist.svg`;
+      actionIcon = `https://shdw-drive.genesysgo.net/B9pU9YFo1JFGS7HY1jFi2Fq3yQgnFXodDV1ZJkBQRZ4H/sacred_awareness_elixir_or_mist.svg`;
     }
 
     const payload: ActionPostResponse = {
@@ -163,19 +163,18 @@ router.post("/quiz-purchase", async (req, res, next) => {
 
     let clickcrateId = ``;
     if (selectedFlower == "1" && selectedProductType == "elixir") {
-      clickcrateId = `8F36dwsrp699v9L4an18fwj1ssa2c9atFSXTNAeK1wmP`;
-    } else if (selectedFlower == "1" && selectedProductType == "mist") {
-      clickcrateId = `5vdMNH3rL8AmhGro3K4KgeuPW9rXmvMrTQCXaMGZGHdH`;
-    } else if (selectedFlower == "2" && selectedProductType == "elixir") {
-      clickcrateId = `9UFxxerNWUZJu8uY5qH2ndBKXk8z29ps3j9rntYih75Z`;
-    } else if (selectedFlower == "2" && selectedProductType == "mist") {
-      clickcrateId = `3U8ysdy3WWkH4RVqYzoQaDgt2U7CdC3WVNbBrJjQVNt4`;
-    } else if (selectedFlower == "3" && selectedProductType == "elixir") {
       clickcrateId = `HywrM8Vjbb4EutuR5fCiF2cW7cbrwJGgDDX8FtymeFhv`;
-    } else if (selectedFlower == "3" && selectedProductType == "mist") {
+    } else if (selectedFlower == "1" && selectedProductType == "mist") {
       clickcrateId = `Cod2wpgXS7A1r4zA1xvqse4byaVyApo6gvDu3UF1TzKW`;
+    } else if (selectedFlower == "2" && selectedProductType == "elixir") {
+      clickcrateId = `8F36dwsrp699v9L4an18fwj1ssa2c9atFSXTNAeK1wmP`;
+    } else if (selectedFlower == "2" && selectedProductType == "mist") {
+      clickcrateId = `5vdMNH3rL8AmhGro3K4KgeuPW9rXmvMrTQCXaMGZGHdH`;
+    } else if (selectedFlower == "3" && selectedProductType == "elixir") {
+      clickcrateId = `9UFxxerNWUZJu8uY5qH2ndBKXk8z29ps3j9rntYih75Z`;
+    } else if (selectedFlower == "3" && selectedProductType == "mist") {
+      clickcrateId = `3U8ysdy3WWkH4RVqYzoQaDgt2U7CdC3WVNbBrJjQVNt4`;
     }
-
     if (clickcrateId === ``) {
       return res.status(400).json({ message: "ClickCrate not found" });
     }
@@ -256,18 +255,18 @@ router.post("/quiz-purchase", async (req, res, next) => {
             icon,
             label: `Purchase ${productListingAsset.content.metadata.name}`,
             title: `${productListingAsset.content.metadata.name}`,
-            description: `IN STOCK: ${productListing.inStock} | SIZE: ${
+            description: `${
               productSizeAttr?.value || "N/A"
-            } | DELIVERY: ~2 weeks 
+            } | Worldwide Shipping
               \n${productListingAsset.content.metadata.description}
               \nOrder confirmations and updates will be sent to your provided email address. To avoid delays ensure all information is correct.
-              \nNeed help? Send us a DM @click_crate on Twitter or email us at support@clickcrate.xyz`,
+              \nNeed help? Send us an email at hello@lotuswei.com`,
             disabled: disable,
             links: {
               actions: [
                 {
                   type: "transaction",
-                  href: `/merch/purchase?clickcrateId=${clickcrateId}&productName=${productListingAsset.content.metadata.name}&productSizes=${productSizeAttr?.value}&productIcon=${icon}&productDescription=${productListingAsset.content.metadata.description}`,
+                  href: `/merch/purchase?clickcrateId=${clickcrateId}&size=${productSizeAttr?.value}&productName=${productListingAsset.content.metadata.name}&productSizes=${productSizeAttr?.value}&productIcon=${icon}&productDescription=${productListingAsset.content.metadata.description}`,
                   label: `${buttonText}`,
                   parameters: [
                     {
@@ -341,7 +340,6 @@ router.post("/purchase", async (req, res, next) => {
   try {
     const { account } = req.body;
     const {
-      size,
       buyerName,
       shippingEmail,
       shippingAddress,
@@ -352,6 +350,7 @@ router.post("/purchase", async (req, res, next) => {
     } = req.body.data;
     const {
       clickcrateId,
+      size,
       productName,
       productSizes,
       productDescription,
@@ -366,6 +365,7 @@ router.post("/purchase", async (req, res, next) => {
 
     if (
       !clickcrateId ||
+      !size ||
       !productName ||
       !productSizes ||
       !productDescription ||
@@ -376,7 +376,6 @@ router.post("/purchase", async (req, res, next) => {
     }
 
     if (
-      !size ||
       !buyerName ||
       !shippingEmail ||
       !shippingAddress ||
