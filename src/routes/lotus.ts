@@ -75,16 +75,16 @@ router.get("/quiz", async (req, res, next) => {
         ],
       },
       error: {
-        message: "Failed to get merch blink",
+        message: "Failed to get fetch quiz",
       },
     };
     res.status(200).json(responseBody);
   } catch (error) {
-    console.error("Error in GET merch blink /:", error);
+    console.error("Error in GET quiz blink /:", error);
     res
       .status(400)
       .set(ACTIONS_CORS_HEADERS_MIDDLEWARE)
-      .json({ message: "Failed to get merch blink" });
+      .json({ message: "Failed to fetch quiz" });
   }
 });
 
@@ -579,11 +579,11 @@ router.get("/:clickcrateId", async (req, res, next) => {
     };
     res.status(200).json(responseBody);
   } catch (error) {
-    console.error("Error in GET merch blink /:", error);
+    console.error("Error in GET product /:", error);
     res
       .status(400)
       .set(ACTIONS_CORS_HEADERS_MIDDLEWARE)
-      .json({ message: "Failed to get merch blink" });
+      .json({ message: "Failed to get product" });
   }
 });
 
